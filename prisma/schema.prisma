@@ -1,0 +1,100 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+// 用户模型
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      String   @default("user")
+  status    String   @default("active")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // 关联
+  companions Companion[]
+  orders     Order[]
+  notifications Notification[]
+  chatMessages ChatMessage[]
+}
+
+// 陪玩模型
+model Companion {
+  id          String   @id @default(cuid())
+  userId      String
+  name        String
+  game        String
+  rank        String
+  price       Decimal  @db.Decimal(10, 2)
+  description String?
+  avatar      String?
+  status      String   @default("pending")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // 关联
+  user   User    @relation(fields: [userId], references: [id])
+}
+
+// 订单模型
+model Order {
+  id              String   @id @default(cuid())
+  userId          String
+  companionId     String
+  companionName   String
+  companionRank   String
+  companionAvatar String?
+  game            String
+  price           Decimal  @db.Decimal(10, 2)
+  status          String   @default("pending")
+  paymentStatus   String   @default("unpaid")
+  paymentMethod   String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  completedAt     DateTime?
+
+  // 关联
+  user User @relation(fields: [userId], references: [id])
+}
+
+// 通知模型
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String
+  title     String
+  message   String
+  data      Json?
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  // 关联
+  user User @relation(fields: [userId], references: [id])
+}
+
+// 聊天记录模型
+model ChatMessage {
+  id            String   @id @default(cuid())
+  userId        String
+  companionName String
+  role          String
+  content       String   @db.Text
+  createdAt     DateTime @default(now())
+
+  // 关联
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId, companionName])
+  @@index([userId])
+}
