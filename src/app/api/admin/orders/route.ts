@@ -36,6 +36,7 @@ export async function GET(request: NextRequest) {
       game: order.game,
       price: Number(order.price),
       status: order.status,
+      paymentId: order.paymentId,
       paymentStatus: order.paymentStatus,
       paymentMethod: order.paymentMethod,
       createdAt: order.createdAt.toISOString(),

@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 
 interface Companion {
-  id: number;
+  id: string;
   name: string;
   game: string;
   rank: string;

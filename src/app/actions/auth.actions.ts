@@ -4,8 +4,6 @@ import { prisma } from '@/lib/db';
 import bcrypt from 'bcrypt';
 import { revalidatePath } from 'next/cache';
 import { generateToken, setAuthCookie, getAuthCookie, verifyToken, clearAuthCookie } from '@/lib/jwt';
-import fs from 'fs';
-import path from 'path';
 
 export async function registerUser(name: string, email: string, password: string) {
   try {
@@ -43,27 +41,6 @@ export async function registerUser(name: string, email: string, password: string
     // 生成token并设置cookie
     const token = generateToken(user.id, user.email, user.role);
     await setAuthCookie(token);
-
-    try {
-      const usersFilePath = path.join(process.cwd(), 'users-list.txt');
-      const now = new Date();
-      const userCount = (await prisma.user.count());
-      
-      const userEntry = `
-用户 ${userCount}:
-  邮箱: ${user.email}
-  姓名: ${user.name}
-  角色: 普通用户
-  状态: 正常
-  注册时间: ${now.toLocaleString('zh-CN')}
-----------------------------------------
-`;
-      
-      fs.appendFileSync(usersFilePath, userEntry, 'utf8');
-      console.log(`新用户 ${user.email} 已记录到 users-list.txt`);
-    } catch (fileError) {
-      console.error('保存用户信息到文件失败:', fileError);
-    }
 
     revalidatePath('/login');
     revalidatePath('/register');

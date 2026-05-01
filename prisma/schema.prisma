@@ -9,6 +9,7 @@ generator client {
 
 datasource db {
   provider = "mysql"
+  url      = env("DATABASE_URL")
 }
 
 // 用户模型
@@ -58,6 +59,7 @@ model Order {
   game            String
   price           Decimal  @db.Decimal(10, 2)
   status          String   @default("pending")
+  paymentId       String?
   paymentStatus   String   @default("unpaid")
   paymentMethod   String?
   createdAt       DateTime @default(now())

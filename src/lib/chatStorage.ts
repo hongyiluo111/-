@@ -11,7 +11,10 @@ function getUserId(): string {
     const cookie = document.cookie
       .split('; ')
       .find(row => row.startsWith('token='));
-    return cookie ? cookie.split('=')[1] : 'anonymous';
+    if (!cookie) return 'anonymous';
+    const token = cookie.split('=')[1];
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return payload.userId || 'anonymous';
   } catch {
     return 'anonymous';
   }

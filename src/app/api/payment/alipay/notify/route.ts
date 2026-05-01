@@ -1,45 +1,58 @@
 import { NextRequest, NextResponse } from 'next/server';
-import AlipaySdk from 'alipay-sdk';
+import { prisma } from '@/lib/db';
 
-// 支付宝配置
 const alipayConfig = {
-  appId: '9021000162692275', // 沙箱AppID
+  appId: process.env.ALIPAY_APP_ID || '',
   privateKey: process.env.ALIPAY_PRIVATE_KEY || '',
   alipayPublicKey: process.env.ALIPAY_PUBLIC_KEY || ''
 };
 
-const alipaySdk = new AlipaySdk({
-  appId: alipayConfig.appId,
-  privateKey: alipayConfig.privateKey,
-  alipayPublicKey: alipayConfig.alipayPublicKey
-});
+async function getAlipaySdk() {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const AlipaySdk = (await import('alipay-sdk')).default as any;
+  return new AlipaySdk({
+    appId: alipayConfig.appId,
+    privateKey: alipayConfig.privateKey,
+    alipayPublicKey: alipayConfig.alipayPublicKey
+  });
+}
 
 export async function POST(request: NextRequest) {
   try {
-    // 解析支付宝回调数据
-    const formData = await request.formData();
-    const data = Object.fromEntries(formData);
+    const text = await request.text();
+    const params = new URLSearchParams(text);
+    const data: Record<string, string> = {};
+    params.forEach((value, key) => { data[key] = value; });
 
-    // 验证签名
+    const alipaySdk = await getAlipaySdk();
     const verifyResult = alipaySdk.checkNotifySign(data);
     if (!verifyResult) {
       return NextResponse.json({ code: 'fail', message: 'Invalid signature' });
     }
 
-    // 处理支付成功逻辑
-    const tradeStatus = data.trade_status as string;
+    const tradeStatus = data.trade_status;
     if (tradeStatus === 'TRADE_SUCCESS' || tradeStatus === 'TRADE_FINISHED') {
-      const orderNo = data.out_trade_no as string;
-      const amount = parseFloat(data.total_amount as string) * 100; // 转换为分
+      const orderNo = data.out_trade_no;
+      const totalAmount = data.total_amount;
 
-      // 这里应该更新订单状态和用户钻石余额
-      // 例如：await updateOrderStatus(orderNo, 'completed');
-      // 例如：await addUserDiamonds(userId, amount * 10); // 1元=10钻石
+      console.log('Alipay payment successful:', { orderNo, totalAmount });
 
-      console.log('Alipay payment successful:', { orderNo, amount });
+      const order = await prisma.order.findFirst({
+        where: { paymentId: orderNo },
+        select: { id: true },
+      });
+
+      if (order) {
+        await prisma.order.update({
+          where: { id: order.id },
+          data: {
+            paymentStatus: 'paid',
+            paymentMethod: 'alipay',
+          },
+        });
+      }
     }
 
-    // 返回成功响应给支付宝
     return NextResponse.json({ code: 'success', message: 'success' });
   } catch (error) {
     console.error('Alipay notify error:', error);

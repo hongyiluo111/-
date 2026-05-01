@@ -1,18 +1,24 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { Bot, Send, X } from 'lucide-react';
+
+type ChatMessage = {
+  role: 'user' | 'assistant';
+  content: string;
+};
 
 export default function AIService() {
   const [isOpen, setIsOpen] = useState(false);
   const [message, setMessage] = useState('');
-  const [messages, setMessages] = useState<{ role: 'user' | 'assistant'; content: string }[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const chatRef = useRef<HTMLDivElement>(null);
 
   const sendMessage = async () => {
     if (!message.trim() || isLoading) return;
 
-    const newMessages: { role: 'user' | 'assistant'; content: string }[] = [...messages, { role: 'user', content: message }];
+    const newMessages: ChatMessage[] = [...messages, { role: 'user', content: message.trim() }];
     setMessages(newMessages);
     setMessage('');
     setIsLoading(true);
@@ -25,27 +31,28 @@ export default function AIService() {
         },
         body: JSON.stringify({
           messages: newMessages,
-          model: 'qwen-turbo',
           temperature: 0.7,
         }),
       });
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error?.message || 'API请求失败');
+        throw new Error(errorData.error?.message || 'AI 服务暂时不可用');
       }
 
       const data = await response.json();
-      const assistantMessage = data.choices[0]?.message?.content || '抱歉，我无法理解您的问题。';
-
-      setMessages(prev => [...prev, { role: 'assistant', content: assistantMessage }]);
+      const assistantMessage = data.choices[0]?.message?.content || '我暂时没有生成有效回复，请稍后再试。';
+      setMessages((prev) => [...prev, { role: 'assistant', content: assistantMessage }]);
     } catch (error) {
-      console.error('AI服务错误:', error);
-      const errorMessage = error instanceof Error ? error.message : '网络连接失败';
-      setMessages(prev => [...prev, { 
-        role: 'assistant', 
-        content: `抱歉，AI服务暂时不可用。\n错误信息：${errorMessage}\n请检查网络连接或稍后再试。` 
-      }]);
+      console.error('AI 服务请求失败:', error);
+      const errorMessage = error instanceof Error ? error.message : '网络或服务异常';
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: 'assistant',
+          content: `AI 助手暂时无法响应：${errorMessage}`,
+        },
+      ]);
     } finally {
       setIsLoading(false);
     }
@@ -55,94 +62,90 @@ export default function AIService() {
     if (chatRef.current) {
       chatRef.current.scrollTop = chatRef.current.scrollHeight;
     }
-  }, [messages]);
+  }, [messages, isLoading]);
 
   return (
-    <div className="fixed right-0 top-1/2 transform -translate-y-1/2 z-50">
-      {/* 侧边AI助手按钮 */}
+    <div className={`fixed bottom-5 right-3 sm:bottom-auto sm:right-0 sm:top-1/2 sm:-translate-y-1/2 ${isOpen ? 'z-[60]' : 'z-50'}`}>
       <button
-        onClick={() => setIsOpen(!isOpen)}
-        className={`flex items-center justify-center transition-all duration-300 ease-in-out z-50 ${
+        onClick={() => setIsOpen((value) => !value)}
+        className={`flex items-center justify-center bg-blue-600 text-white shadow-lg transition-all duration-300 hover:bg-blue-700 ${
           isOpen
-            ? 'w-12 h-12 rounded-full bg-blue-600 shadow-lg hover:bg-blue-700'
-            : 'w-6 h-24 bg-blue-600 rounded-l-lg shadow-lg hover:bg-blue-700'
+            ? 'h-12 w-12 rounded-full'
+            : 'h-14 w-14 rounded-full sm:h-24 sm:w-7 sm:rounded-l-lg sm:rounded-r-none'
         }`}
-        aria-label={isOpen ? '关闭AI服务' : '打开AI服务'}
+        aria-label={isOpen ? '关闭 AI 助手' : '打开 AI 助手'}
       >
         {isOpen ? (
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-7 w-7 text-white"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M6 18L18 6M6 6l12 12"
-            />
-          </svg>
+          <X className="h-6 w-6" aria-hidden="true" />
         ) : (
-          <div className="text-white text-xs font-medium flex items-center justify-center h-full px-1">
-            AI助手
-          </div>
+          <>
+            <Bot className="h-5 w-5 sm:hidden" aria-hidden="true" />
+            <span className="hidden h-full items-center justify-center px-1 text-xs font-medium leading-tight [writing-mode:vertical-rl] sm:flex">
+              AI助手
+            </span>
+          </>
         )}
       </button>
 
-      {/* 聊天窗口 */}
       {isOpen && (
-        <div className="absolute right-16 top-1/2 transform -translate-y-1/2 w-80 h-96 bg-white rounded-lg shadow-xl border border-gray-200 flex flex-col">
-          <div className="bg-blue-600 text-white p-4 rounded-t-lg">
-            <h3 className="font-semibold">AI助手</h3>
+        <div className="fixed inset-x-0 bottom-0 flex h-[70vh] flex-col overflow-hidden rounded-t-2xl border border-gray-200 bg-white shadow-2xl dark:border-gray-700 dark:bg-gray-900 sm:absolute sm:inset-x-auto sm:bottom-auto sm:right-16 sm:top-1/2 sm:h-[min(28rem,calc(100vh-7rem))] sm:w-80 sm:-translate-y-1/2 sm:rounded-xl">
+          <div className="flex items-center gap-2 bg-blue-600 px-4 py-3 text-white">
+            <Bot className="h-5 w-5" aria-hidden="true" />
+            <h3 className="font-semibold">AI 助手</h3>
           </div>
-          
-          <div
-            ref={chatRef}
-            className="flex-grow p-4 overflow-y-auto space-y-4"
-          >
+
+          <div ref={chatRef} className="flex-grow space-y-3 overflow-y-auto p-4">
+            {messages.length === 0 && (
+              <p className="rounded-lg bg-gray-100 p-3 text-sm text-gray-600 dark:bg-gray-800 dark:text-gray-300">
+                可以询问陪玩推荐、游戏选择或订单流程。
+              </p>
+            )}
+
             {messages.map((msg, index) => (
-              <div key={index} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+              <div key={`${msg.role}-${index}`} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                 <div
-                  className={`max-w-[80%] p-3 rounded-lg ${msg.role === 'user' ? 'bg-blue-100' : 'bg-gray-100'}`}
+                  className={`max-w-[82%] rounded-lg p-3 text-sm leading-relaxed ${
+                    msg.role === 'user'
+                      ? 'bg-blue-100 text-blue-950 dark:bg-blue-950 dark:text-blue-100'
+                      : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100'
+                  }`}
                 >
-                  <p>{msg.content}</p>
+                  {msg.content}
                 </div>
               </div>
             ))}
+
             {isLoading && (
               <div className="flex justify-start">
-                <div className="bg-gray-100 p-3 rounded-lg">
-                  <p className="text-gray-500">正在思考...</p>
+                <div className="rounded-lg bg-gray-100 p-3 text-sm text-gray-500 dark:bg-gray-800 dark:text-gray-300">
+                  正在回复...
                 </div>
               </div>
             )}
           </div>
 
-          <div className="p-4 border-t border-gray-200">
-            <div className="flex space-x-2">
+          <div className="border-t border-gray-200 p-3 dark:border-gray-700">
+            <div className="flex gap-2">
               <input
                 type="text"
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
-                placeholder="请输入您的问题..."
-                className="flex-grow p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
+                placeholder="输入你的问题..."
+                className="min-w-0 flex-grow rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100"
               />
               <button
                 onClick={sendMessage}
                 disabled={isLoading || !message.trim()}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                className="inline-flex h-10 w-10 flex-none items-center justify-center rounded-lg bg-blue-600 text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-400"
+                aria-label="发送消息"
               >
-                发送
+                <Send className="h-4 w-4" aria-hidden="true" />
               </button>
             </div>
           </div>
         </div>
       )}
-
-
     </div>
   );
 }

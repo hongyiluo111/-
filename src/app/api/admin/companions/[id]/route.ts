@@ -17,9 +17,9 @@ function getAdminFromRequest(request: NextRequest) {
 }
 
 interface RouteContext {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 export async function PATCH(request: NextRequest, { params }: RouteContext) {
@@ -29,7 +29,7 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
   }
 
   try {
-    const { id } = params;
+    const { id } = await params;
     const body = await request.json();
     const { userId, name, game, rank, price, description, avatar, status } = body as {
       userId?: string;
@@ -47,30 +47,27 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
       return NextResponse.json({ error: '陪玩不存在' }, { status: 404 });
     }
 
-    if (!userId || !name || !game || !rank || price === undefined || price === null || !status) {
-      return NextResponse.json({ error: '缺少必要参数' }, { status: 400 });
+    if (status && !['pending', 'active', 'paused', 'inactive'].includes(status)) {
+      return NextResponse.json({ error: '状态不合法' }, { status: 400 });
     }
 
-    const owner = await prisma.user.findUnique({ where: { id: userId }, select: { id: true, status: true } });
-    if (!owner) {
-      return NextResponse.json({ error: '用户不存在' }, { status: 404 });
-    }
-    if (owner.status !== 'active') {
-      return NextResponse.json({ error: '目标用户状态异常' }, { status: 400 });
+    const updateData: Record<string, unknown> = {};
+    if (userId !== undefined) updateData.userId = userId;
+    if (name !== undefined) updateData.name = name.trim();
+    if (game !== undefined) updateData.game = game.trim();
+    if (rank !== undefined) updateData.rank = rank.trim();
+    if (price !== undefined) updateData.price = Number(price);
+    if (description !== undefined) updateData.description = description?.trim() || null;
+    if (avatar !== undefined) updateData.avatar = avatar?.trim() || null;
+    if (status !== undefined) updateData.status = status;
+
+    if (Object.keys(updateData).length === 0) {
+      return NextResponse.json({ error: '缺少更新参数' }, { status: 400 });
     }
 
     const updated = await prisma.companion.update({
       where: { id },
-      data: {
-        userId,
-        name: name.trim(),
-        game: game.trim(),
-        rank: rank.trim(),
-        price: Number(price),
-        description: description?.trim() || null,
-        avatar: avatar?.trim() || null,
-        status,
-      },
+      data: updateData,
     });
 
     return NextResponse.json({
@@ -94,7 +91,7 @@ export async function DELETE(request: NextRequest, { params }: RouteContext) {
   }
 
   try {
-    const { id } = params;
+    const { id } = await params;
 
     const existing = await prisma.companion.findUnique({ where: { id }, select: { id: true } });
     if (!existing) {

@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
+import { formatDate } from '@/utils/date';
+import AdminGuard from '@/components/AdminGuard';
 
 const COMPANION_FILTER_STORAGE_KEY = 'admin_companions_filters_v1';
 
@@ -50,16 +52,6 @@ const defaultForm: CompanionForm = {
   avatar: '',
   status: 'pending',
 };
-
-function formatDate(dateStr: string): string {
-  const date = new Date(dateStr);
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const d = String(date.getDate()).padStart(2, '0');
-  const h = String(date.getHours()).padStart(2, '0');
-  const min = String(date.getMinutes()).padStart(2, '0');
-  return `${y}-${m}-${d} ${h}:${min}`;
-}
 
 export default function CompanionsManagement() {
   const [companions, setCompanions] = useState<CompanionItem[]>([]);
@@ -255,6 +247,7 @@ export default function CompanionsManagement() {
   };
 
   return (
+    <AdminGuard>
     <div className="min-h-screen bg-gray-50">
       <div className="bg-gradient-to-br from-primary via-[#1f7dd6] to-accent px-4 py-14 text-white">
         <div className="container mx-auto max-w-6xl">
@@ -509,5 +502,6 @@ export default function CompanionsManagement() {
         </div>
       )}
     </div>
+    </AdminGuard>
   );
 }

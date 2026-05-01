@@ -35,13 +35,32 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '参数不完整或不合法' }, { status: 400 });
     }
 
+    // 验证陪玩是否存在且状态为 active
+    const companion = await prisma.companion.findUnique({
+      where: { id: String(companionId) },
+      select: { id: true, status: true, price: true, name: true, rank: true, avatar: true },
+    });
+
+    if (!companion) {
+      return NextResponse.json({ error: '陪玩不存在' }, { status: 404 });
+    }
+
+    if (companion.status !== 'active') {
+      return NextResponse.json({ error: '陪玩当前不可用' }, { status: 400 });
+    }
+
+    // 验证价格是否匹配
+    if (Number(companion.price) !== price) {
+      return NextResponse.json({ error: '价格不匹配，请刷新页面重试' }, { status: 400 });
+    }
+
     const order = await prisma.order.create({
       data: {
         userId: user.id,
-        companionId: String(companionId),
-        companionName: companionName.trim(),
-        companionRank: (rank || '').trim(),
-        companionAvatar: companionAvatar?.trim() || '',
+        companionId: companion.id,
+        companionName: companion.name,
+        companionRank: companion.rank,
+        companionAvatar: companion.avatar || '',
         game: game.trim(),
         price,
         status: 'pending',

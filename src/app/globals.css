@@ -14,6 +14,18 @@
   --success: #4caf50;
 }
 
+.dark {
+  --primary: #64b5f6;
+  --secondary: #90caf9;
+  --accent: #1565c0;
+  --background: #0f172a;
+  --surface: #1e293b;
+  --error: #ef5350;
+  --warning: #ffa726;
+  --info: #42a5f5;
+  --success: #66bb6a;
+}
+
 body {
   font-family: 'Inter', system-ui, sans-serif;
   background:
@@ -24,55 +36,155 @@ body {
   min-height: 100vh;
 }
 
+.dark body,
+body.dark {
+  background:
+    radial-gradient(circle at 10% 10%, rgba(100, 181, 246, 0.08), transparent 35%),
+    radial-gradient(circle at 85% 5%, rgba(144, 202, 249, 0.06), transparent 35%),
+    linear-gradient(180deg, #0f172a 0%, #111827 45%, #0f172a 100%);
+  color: #e2e8f0;
+}
+
 * {
   -webkit-tap-highlight-color: transparent;
 }
 
+/* ====== 按钮体系 ======
+   全局按钮交互：ripple 波纹 + active 按压 + focus-visible 焦点环
+*/
+
 .btn {
-  @apply inline-flex items-center justify-center px-4 py-2.5 rounded-xl font-medium transition-all duration-300;
+  @apply inline-flex items-center justify-center px-4 py-2.5 rounded-xl font-medium transition-all duration-200 cursor-pointer select-none;
+  position: relative;
+  overflow: hidden;
+}
+
+/* 按钮按压反馈 */
+.btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+/* Ripple 波纹效果 */
+.btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle, rgba(255,255,255,0.35) 10%, transparent 10.01%);
+  transform: scale(10);
+  opacity: 0;
+  pointer-events: none;
+  transition: transform 0.5s ease, opacity 0.5s ease;
+}
+
+.btn:active::after {
+  transform: scale(0);
+  opacity: 1;
+  transition: 0s;
+}
+
+/* Focus-visible 焦点环 */
+.btn:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
 }
 
 .btn-primary {
-  @apply bg-gradient-to-r from-primary to-secondary text-white border border-primary/30 shadow-sm hover:shadow-lg hover:translate-y-[-2px] active:translate-y-0 active:scale-[0.99];
+  @apply bg-gradient-to-r from-primary to-secondary text-white border border-primary/30 shadow-sm hover:shadow-lg hover:translate-y-[-2px] active:translate-y-0;
 }
 
 .btn-secondary {
-  @apply bg-white/90 backdrop-blur text-primary border border-primary/25 hover:bg-white hover:border-primary/40 active:scale-[0.99];
+  @apply bg-white/90 backdrop-blur text-primary border border-primary/25 hover:bg-white hover:border-primary/40;
+}
+
+.btn-secondary::after {
+  background: radial-gradient(circle, rgba(25,118,210,0.12) 10%, transparent 10.01%);
 }
 
 .btn-danger {
   @apply bg-gradient-to-r from-error to-error/80 text-white border border-error/30 hover:shadow-lg hover:translate-y-[-2px];
 }
 
+/* ====== 原生 <button> 全局增强 ======*/
+button:not(:disabled) {
+  cursor: pointer;
+}
+
+button:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* 通用按钮按压 & ripple */
+button:not(.btn):not(:disabled):active {
+  transform: scale(0.97);
+  transition: transform 0.1s ease;
+}
+
+button:not(.btn)::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle, rgba(0,0,0,0.08) 10%, transparent 10.01%);
+  transform: scale(10);
+  opacity: 0;
+  pointer-events: none;
+  transition: transform 0.5s ease, opacity 0.5s ease;
+}
+
+button:not(.btn):active::after {
+  transform: scale(0);
+  opacity: 1;
+  transition: 0s;
+}
+
+/* 确保所有 <button> 都有 relative + overflow 以支持 ripple */
+button {
+  position: relative;
+  overflow: hidden;
+}
+
+/* ====== 链接式按钮 (a.btn) ======*/
+a.btn {
+  cursor: pointer;
+}
+
+a.btn:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
 .card {
-  @apply bg-white/90 backdrop-blur rounded-2xl shadow-md p-6 border border-white/80;
+  @apply bg-white/60 dark:bg-gray-800/60 backdrop-blur-xl rounded-2xl shadow-md p-6 border border-white/30 dark:border-gray-700/40;
+  box-shadow:
+    0 4px 24px -1px rgba(0, 0, 0, 0.06),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.5);
+}
+
+.dark .card {
+  box-shadow:
+    0 4px 24px -1px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
 }
 
 .interactive-card {
   @apply transition-all duration-300 will-change-transform hover:-translate-y-1 hover:shadow-xl;
 }
 
-.tilt-card {
-  transform-style: preserve-3d;
-  transition: transform 180ms ease, box-shadow 220ms ease;
-  will-change: transform;
-}
-
-.magnetic-btn {
-  transform: translate3d(var(--mx, 0px), var(--my, 0px), 0);
-  transition: transform 120ms ease;
-}
-
 .input {
-  @apply w-full px-4 py-2 rounded-xl border border-gray-300/90 bg-white/90 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary;
+  @apply w-full px-4 py-2 rounded-xl border border-gray-300/90 dark:border-gray-600/90 bg-white/90 dark:bg-gray-800/90 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary;
 }
 
 .select {
-  @apply w-full px-4 py-2 rounded-xl border border-gray-300/90 bg-white/90 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary;
+  @apply w-full px-4 py-2 rounded-xl border border-gray-300/90 dark:border-gray-600/90 bg-white/90 dark:bg-gray-800/90 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary;
 }
 
 .nav-link {
-  @apply px-4 py-2 rounded-xl transition-all duration-300 border border-transparent text-gray-700 hover:bg-primary/10 hover:text-primary;
+  @apply px-4 py-2 rounded-xl transition-all duration-300 border border-transparent text-gray-700 dark:text-gray-300 hover:bg-primary/10 hover:text-primary;
+}
+
+.nav-link:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
 }
 
 .nav-link-active {
@@ -175,25 +287,6 @@ body {
   transform: translateY(0) scale(1);
 }
 
-@media (prefers-reduced-motion: reduce) {
-  html {
-    scroll-behavior: auto;
-  }
-
-  *,
-  *::before,
-  *::after {
-    animation: none !important;
-    transition-duration: 0.01ms !important;
-    transition-delay: 0ms !important;
-  }
-
-  .tilt-card,
-  .magnetic-btn {
-    transform: none !important;
-  }
-}
-
 /* 滚动条样式 */
 ::-webkit-scrollbar {
   width: 8px;
@@ -204,13 +297,25 @@ body {
   border-radius: 4px;
 }
 
+.dark ::-webkit-scrollbar-track {
+  background: #1e293b;
+}
+
 ::-webkit-scrollbar-thumb {
   background: #c1c1c1;
   border-radius: 4px;
 }
 
+.dark ::-webkit-scrollbar-thumb {
+  background: #475569;
+}
+
 ::-webkit-scrollbar-thumb:hover {
   background: #a1a1a1;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
 }
 
 /* 平滑滚动 */
@@ -233,30 +338,153 @@ html {
   @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary;
 }
 
+.text-gradient-hero {
+  @apply bg-clip-text text-transparent;
+  background-image: linear-gradient(135deg, #ffffff 0%, #93c5fd 50%, #60a5fa 100%);
+}
+
+.dark .text-gradient-hero {
+  background-image: linear-gradient(135deg, #e2e8f0 0%, #64b5f6 50%, #42a5f5 100%);
+}
+
 /* 空状态容器 */
 .empty-state {
-  @apply rounded-2xl border border-dashed border-gray-200 bg-white/70 px-6 py-10 text-center text-gray-500;
+  @apply rounded-2xl border border-dashed border-gray-200 dark:border-gray-700 bg-white/70 dark:bg-gray-800/70 px-6 py-10 text-center text-gray-500 dark:text-gray-400;
 }
 
 /* 统一表格观感 */
 .table-shell {
-  @apply overflow-hidden rounded-2xl border border-gray-100/90 bg-white;
+  @apply overflow-hidden rounded-2xl border border-gray-100/90 dark:border-gray-800/90 bg-white dark:bg-gray-900;
 }
 
 .table-shell table {
-  @apply min-w-full divide-y divide-gray-200;
+  @apply min-w-full divide-y divide-gray-200 dark:divide-gray-700;
 }
 
 .table-shell thead {
-  @apply bg-slate-50/80;
+  @apply bg-slate-50/80 dark:bg-gray-800/80;
 }
 
 .table-shell th {
-  @apply px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500;
+  @apply px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400;
 }
 
 .table-shell td {
   @apply px-4 py-3 text-sm;
+}
+
+/* ====== 粒子背景 ====== */
+@keyframes particleFloat {
+  0%, 100% { transform: translateY(0) translateX(0); opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { transform: translateY(-100vh) translateX(20px); opacity: 0; }
+}
+
+.hero-particles {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.hero-particles span {
+  position: absolute;
+  bottom: -10px;
+  width: 3px;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 50%;
+  animation: particleFloat linear infinite;
+}
+
+/* ====== 噪点纹理 ====== */
+.noise-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 128px 128px;
+}
+
+/* ====== 鼠标光晕 ====== */
+.mouse-glow {
+  position: fixed;
+  width: 400px;
+  height: 400px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(25, 118, 210, 0.08) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 1;
+  transform: translate(-50%, -50%);
+  transition: left 0.3s ease-out, top 0.3s ease-out;
+}
+
+.dark .mouse-glow {
+  background: radial-gradient(circle, rgba(100, 181, 246, 0.06) 0%, transparent 70%);
+}
+
+/* ====== 数字滚动 ====== */
+@keyframes countUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.count-up {
+  animation: countUp 0.4s ease-out forwards;
+}
+
+/* ====== 按钮 shimmer 增强 ====== */
+.btn-primary::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transition: left 0.5s ease;
+  pointer-events: none;
+}
+
+.btn-primary:hover::before {
+  left: 100%;
+}
+
+/* ====== 卡片 shimmer 增强 ====== */
+.card-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.card-shimmer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-120%);
+  background: linear-gradient(110deg, transparent 20%, rgba(255, 255, 255, 0.25) 48%, transparent 72%);
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+.card-shimmer:hover::after {
+  animation: shimmerSlide 0.9s ease;
+}
+
+/* ====== 返回顶部按钮 ====== */
+.back-to-top {
+  @apply fixed bottom-20 right-3 z-40 flex h-10 w-10 items-center justify-center rounded-full bg-primary/80 text-white shadow-lg backdrop-blur transition-all duration-300 hover:bg-primary hover:scale-110;
+  opacity: 0;
+  transform: translateY(20px);
+  pointer-events: none;
+}
+
+.back-to-top.visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
 }
 
 /* ====== 减少动画模式 ======
@@ -303,8 +531,18 @@ html {
     transform: none !important;
   }
 
-  .shimmer-sweep:hover::after {
+  .shimmer-sweep:hover::after,
+  .card-shimmer:hover::after,
+  .btn-primary:hover::before {
     animation: none !important;
+  }
+
+  .hero-particles span {
+    display: none !important;
+  }
+
+  .mouse-glow {
+    display: none !important;
   }
 
   .btn-primary:hover {
@@ -313,5 +551,16 @@ html {
 
   .card-hover:hover {
     transform: none !important;
+  }
+
+  /* 禁用按钮按压与 ripple */
+  .btn:active:not(:disabled),
+  button:not(.btn):not(:disabled):active {
+    transform: none !important;
+  }
+
+  .btn::after,
+  button:not(.btn)::after {
+    display: none !important;
   }
 }

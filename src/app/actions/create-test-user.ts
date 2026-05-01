@@ -65,20 +65,3 @@ export async function createAdminUser() {
   }
 }
 
-// 执行创建测试用户
-createTestUser()
-  .then((result) => {
-    console.log('测试用户创建结果:', result);
-  })
-  .catch((error) => {
-    console.error('创建测试用户失败:', error);
-  });
-
-// 执行创建管理员用户
-createAdminUser()
-  .then((result) => {
-    console.log('管理员用户创建结果:', result);
-  })
-  .catch((error) => {
-    console.error('创建管理员用户失败:', error);
-  });

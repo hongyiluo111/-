@@ -2,28 +2,8 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
-
-const statusLabels: Record<string, string> = {
-  pending: '待接单',
-  accepted: '已接单',
-  in_progress: '进行中',
-  completed: '已完成',
-  cancelled: '已取消',
-};
-
-const statusColors: Record<string, string> = {
-  pending: 'bg-yellow-100 text-yellow-800',
-  accepted: 'bg-blue-100 text-blue-800',
-  in_progress: 'bg-purple-100 text-purple-800',
-  completed: 'bg-green-100 text-green-800',
-  cancelled: 'bg-red-100 text-red-800',
-};
-
-const paymentLabels: Record<string, string> = {
-  unpaid: '未支付',
-  paid: '已支付',
-  refunded: '已退款',
-};
+import { statusLabels, statusColors, paymentLabels } from '@/data/orderConstants';
+import { formatDate } from '@/utils/date';
 
 const filterOptions = [
   { value: 'all', label: '全部' },
@@ -50,16 +30,6 @@ interface Order {
   createdAt: string;
   updatedAt: string;
   completedAt: string | null;
-}
-
-function formatDate(dateStr: string): string {
-  const date = new Date(dateStr);
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const d = String(date.getDate()).padStart(2, '0');
-  const h = String(date.getHours()).padStart(2, '0');
-  const min = String(date.getMinutes()).padStart(2, '0');
-  return `${y}-${m}-${d} ${h}:${min}`;
 }
 
 export default function OrderManagement() {

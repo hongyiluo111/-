@@ -20,15 +20,20 @@ export default function OrderNotification() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
 
   useEffect(() => {
-    // 初始化Pusher
-    const pusher = new Pusher(process.env.NEXT_PUBLIC_PUSHER_KEY || '', {
-      cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER || '',
-    });
+    const key = process.env.NEXT_PUBLIC_PUSHER_KEY;
+    const cluster = process.env.NEXT_PUBLIC_PUSHER_CLUSTER;
+    if (!key || !cluster) return;
 
-    // 订阅订单通知频道
+    let pusher: Pusher;
+    try {
+      pusher = new Pusher(key, { cluster });
+    } catch {
+      console.error('Pusher 初始化失败');
+      return;
+    }
+
     const channel = pusher.subscribe('order-notifications');
 
-    // 监听新订单通知
     channel.bind('new-order', (data: Notification) => {
       setNotifications((prev) => [data, ...prev]);
     });

@@ -3,40 +3,15 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
 import { allCompanions, type Companion } from '@/data/companions';
+import { getGameColor } from '@/data/gameColors';
 import { useUserStore } from '@/store/user';
 import BookingModal from './BookingModal';
+import ChatModal from './ChatModal';
 import TiltCard from './TiltCard';
 import MagneticButton from './MagneticButton';
 
-const gameColors: Record<string, string> = {
-  三角洲行动: 'from-green-500 to-emerald-600',
-  王者荣耀: 'from-orange-500 to-red-500',
-  英雄联盟: 'from-blue-500 to-indigo-600',
-  英雄联盟手游: 'from-blue-400 to-purple-500',
-  和平精英: 'from-yellow-500 to-orange-500',
-  VALORANT: 'from-pink-500 to-rose-600',
-  金铲铲之战: 'from-teal-500 to-cyan-600',
-  穿越火线: 'from-gray-500 to-gray-700',
-  第五人格: 'from-amber-500 to-orange-600',
-  蛋仔派对: 'from-pink-400 to-purple-500',
-  暗区突围: 'from-yellow-600 to-amber-700',
-  CS2: 'from-orange-400 to-red-500',
-};
-
-const DEFAULT_GAME_COLOR = 'from-primary to-accent';
 const ITEMS_PER_PAGE = 16;
 const LOGIN_ALERT_DURATION = 3000;
-
-interface ChatModalProps {
-  companionName: string;
-  onClose: () => void;
-}
-
-interface ChatMessage {
-  role: string;
-  content: string;
-  timestamp: number;
-}
 
 interface CompanionListProps {
   filters?: {
@@ -44,141 +19,6 @@ interface CompanionListProps {
     rank: string;
     priceRange: string;
   };
-}
-
-function ChatModal({ companionName, onClose }: ChatModalProps) {
-  const [message, setMessage] = useState('');
-  const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
-  const [error, setError] = useState('');
-
-  useEffect(() => {
-    const loadHistory = async () => {
-      try {
-        const response = await fetch(`/api/chat/messages?companionName=${encodeURIComponent(companionName)}`);
-        if (!response.ok) {
-          return;
-        }
-
-        const data = await response.json();
-        setChatHistory(data.messages || []);
-      } catch (loadError) {
-        console.error('加载聊天记录失败:', loadError);
-      }
-    };
-
-    loadHistory();
-  }, [companionName]);
-
-  const saveMessage = async (role: string, content: string) => {
-    try {
-      await fetch('/api/chat/messages', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ companionName, role, content }),
-      });
-    } catch (saveError) {
-      console.error('保存消息失败:', saveError);
-    }
-  };
-
-  const handleSend = async () => {
-    const trimmedMessage = message.trim();
-    if (!trimmedMessage) {
-      return;
-    }
-
-    const userMessage: ChatMessage = {
-      role: 'user',
-      content: trimmedMessage,
-      timestamp: Date.now(),
-    };
-    const nextHistory = [...chatHistory, userMessage];
-
-    setChatHistory(nextHistory);
-    setMessage('');
-    setError('');
-
-    await saveMessage('user', trimmedMessage);
-
-    try {
-      const response = await fetch('/api/ai/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          messages: nextHistory.map(({ role, content }) => ({ role, content })),
-          model: 'qwen-turbo',
-          temperature: 0.7,
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        setError(errorData.error || '发送消息失败，请稍后重试');
-        return;
-      }
-
-      const data = await response.json();
-      const assistantMessage: ChatMessage = {
-        role: 'assistant',
-        content: data.choices[0]?.message?.content || '抱歉，我暂时无法理解你的问题。',
-        timestamp: Date.now(),
-      };
-      const updatedHistory = [...nextHistory, assistantMessage];
-
-      setChatHistory(updatedHistory);
-      await saveMessage('assistant', assistantMessage.content);
-    } catch (requestError) {
-      console.error('发送消息失败:', requestError);
-      setError('网络错误，请检查网络连接');
-    }
-  };
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="flex h-[500px] w-96 flex-col rounded-lg bg-white">
-        <div className="flex items-center justify-between rounded-t-lg bg-blue-600 p-4 text-white">
-          <h3 className="font-semibold">与 {companionName} 聊天</h3>
-          <button onClick={onClose} className="text-white hover:text-gray-200">
-            ×
-          </button>
-        </div>
-
-        <div className="flex-grow space-y-4 overflow-y-auto p-4">
-          {chatHistory.length === 0 && <p className="text-center text-sm text-gray-500">开始和 {companionName} 聊天吧！</p>}
-
-          {chatHistory.map((msg, index) => (
-            <div key={`${msg.timestamp}-${index}`} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-              <div className={`max-w-[80%] rounded-lg p-3 ${msg.role === 'user' ? 'bg-blue-100' : 'bg-gray-100'}`}>
-                <p>{msg.content}</p>
-              </div>
-            </div>
-          ))}
-
-          {error && <div className="rounded bg-red-50 p-2 text-center text-sm text-red-500">{error}</div>}
-        </div>
-
-        <div className="border-t p-4">
-          <div className="flex space-x-2">
-            <input
-              type="text"
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  void handleSend();
-                }
-              }}
-              placeholder={`给 ${companionName} 发消息...`}
-              className="flex-grow rounded-lg border p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <button onClick={handleSend} className="rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700">
-              发送
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
 }
 
 function matchesPriceRange(price: number, priceRange: string) {
@@ -204,7 +44,7 @@ export default function CompanionList({ filters }: CompanionListProps) {
   const [bookingCompanion, setBookingCompanion] = useState<Companion | null>(null);
   const [showLoginAlert, setShowLoginAlert] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [visibleCardIds, setVisibleCardIds] = useState<Record<number, boolean>>({});
+  const [visibleCardIds, setVisibleCardIds] = useState<Record<string, boolean>>({});
   const loginAlertTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const observerRef = useRef<IntersectionObserver | null>(null);
 
@@ -243,31 +83,6 @@ export default function CompanionList({ filters }: CompanionListProps) {
     };
   }, []);
 
-  useEffect(() => {
-    if (typeof window === 'undefined') {
-      return;
-    }
-    if (observerRef.current) {
-      observerRef.current.disconnect();
-    }
-    observerRef.current = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (!entry.isIntersecting) {
-            return;
-          }
-          const cardId = Number(entry.target.getAttribute('data-card-id'));
-          if (!Number.isNaN(cardId)) {
-            setVisibleCardIds((prev) => ({ ...prev, [cardId]: true }));
-          }
-          observerRef.current?.unobserve(entry.target);
-        });
-      },
-      { threshold: 0.15 }
-    );
-    return () => observerRef.current?.disconnect();
-  }, [paginatedCompanions]);
-
   const filteredCompanions = useMemo(() => {
     return allCompanions.filter((companion) => {
       if (filters?.game && companion.game !== filters.game) {
@@ -288,6 +103,31 @@ export default function CompanionList({ filters }: CompanionListProps) {
     const start = (currentPage - 1) * ITEMS_PER_PAGE;
     return filteredCompanions.slice(start, start + ITEMS_PER_PAGE);
   }, [currentPage, filteredCompanions]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+    if (observerRef.current) {
+      observerRef.current.disconnect();
+    }
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) {
+            return;
+          }
+          const cardId = entry.target.getAttribute('data-card-id');
+          if (cardId) {
+            setVisibleCardIds((prev) => ({ ...prev, [cardId]: true }));
+          }
+          observerRef.current?.unobserve(entry.target);
+        });
+      },
+      { threshold: 0.15 }
+    );
+    return () => observerRef.current?.disconnect();
+  }, [paginatedCompanions]);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -314,17 +154,7 @@ export default function CompanionList({ filters }: CompanionListProps) {
     }, LOGIN_ALERT_DURATION);
   };
 
-  const isLoggedIn = () => {
-    if (user) {
-      return true;
-    }
-
-    if (typeof document === 'undefined') {
-      return false;
-    }
-
-    return document.cookie.includes('token=');
-  };
+  const isLoggedIn = () => !!user;
 
   return (
     <div>
@@ -342,7 +172,7 @@ export default function CompanionList({ filters }: CompanionListProps) {
         <>
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {paginatedCompanions.map((companion) => {
-              const gameColor = gameColors[companion.game] || DEFAULT_GAME_COLOR;
+              const gameColor = getGameColor(companion.game);
 
               return (
                 <TiltCard
@@ -397,7 +227,7 @@ export default function CompanionList({ filters }: CompanionListProps) {
                       <div className="flex space-x-2">
                         <MagneticButton
                           onClick={() => setChatCompanion(companion.name)}
-                          className="rounded-xl bg-gray-100 px-3 py-1.5 text-sm text-gray-700 transition-colors hover:bg-gray-200 magnetic-btn"
+                          className="rounded-xl bg-gray-100 px-3 py-1.5 text-sm text-gray-700 transition-colors hover:bg-gray-200"
                           strength={8}
                         >
                           聊天
@@ -411,7 +241,7 @@ export default function CompanionList({ filters }: CompanionListProps) {
 
                             showLoginPrompt();
                           }}
-                          className={`rounded-xl bg-gradient-to-r px-3 py-1.5 text-sm text-white transition-all hover:shadow-md magnetic-btn ${gameColor}`}
+                          className={`rounded-xl bg-gradient-to-r px-3 py-1.5 text-sm text-white transition-all hover:shadow-md ${gameColor}`}
                           strength={8}
                         >
                           预约

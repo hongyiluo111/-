@@ -5,7 +5,16 @@ const nextConfig = {
   assetPrefix: '/',
   basePath: '',
   images: {
-    unoptimized: true,
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'img-tc.tapimg.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'trae-api-cn.mchost.guru',
+      },
+    ],
   },
 };
 

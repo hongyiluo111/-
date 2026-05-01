@@ -9,9 +9,9 @@ export async function getUsers(page: number = 1, limit: number = 10) {
       take: limit,
       orderBy: { createdAt: 'desc' }
     });
-    return users;
+    return { success: true, users };
   } catch (error: unknown) {
-    throw new Error(error instanceof Error ? error.message : '获取用户列表失败');
+    return { success: false, error: error instanceof Error ? error.message : '获取用户列表失败' };
   }
 }
 
@@ -21,8 +21,8 @@ export async function toggleUserBan(userId: string, isBanned: boolean) {
       where: { id: userId },
       data: { status: isBanned ? 'banned' : 'active' }
     });
-    return user;
+    return { success: true, user };
   } catch (error: unknown) {
-    throw new Error(error instanceof Error ? error.message : '更新用户状态失败');
+    return { success: false, error: error instanceof Error ? error.message : '更新用户状态失败' };
   }
 }

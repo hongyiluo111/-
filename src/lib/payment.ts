@@ -1,4 +1,3 @@
-import AlipaySdk from 'alipay-sdk';
 import Pay from 'wechatpay-node-v3';
 
 type AlipayClient = {
@@ -52,7 +51,12 @@ const wechatConfig = {
 let alipaySdk: AlipayClient | null = null;
 let wechatPay: WechatClient | null = null;
 
-if (alipayConfig.privateKey) {
+async function initAlipaySdk() {
+  if (alipaySdk) return alipaySdk;
+  if (!alipayConfig.privateKey) return null;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const AlipaySdk = (await import('alipay-sdk')).default as any;
   alipaySdk = new AlipaySdk({
     appId: alipayConfig.appId,
     privateKey: alipayConfig.privateKey,
@@ -60,14 +64,17 @@ if (alipayConfig.privateKey) {
     gateway: alipayConfig.gateway,
     signType: 'RSA2',
   }) as unknown as AlipayClient;
+  return alipaySdk;
 }
 
 if (wechatConfig.privateKey) {
   wechatPay = new Pay({
     appid: wechatConfig.appid,
     mchid: wechatConfig.mchid,
-    publicKey: wechatConfig.publicKey,
-    privateKey: wechatConfig.privateKey,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    publicKey: Buffer.from(wechatConfig.publicKey) as any,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    privateKey: Buffer.from(wechatConfig.privateKey) as any,
   }) as unknown as WechatClient;
 }
 
@@ -75,15 +82,22 @@ function generateOrderNo() {
   return Date.now().toString() + Math.floor(Math.random() * 10000).toString().padStart(4, '0');
 }
 
-async function createAlipayOrder(amount: number, userId: string) {
-  if (!alipaySdk) {
-    return `https://openapi-sandbox.dl.alipaydev.com/gateway.do?amount=${amount}`;
+type PaymentResult = { paymentUrl: string; paymentId: string };
+
+async function createAlipayOrder(amount: number, userId: string): Promise<PaymentResult> {
+  const sdk = await initAlipaySdk();
+  const orderNo = generateOrderNo();
+
+  if (!sdk) {
+    return {
+      paymentId: orderNo,
+      paymentUrl: `https://openapi-sandbox.dl.alipaydev.com/gateway.do?amount=${amount}`,
+    };
   }
 
-  const orderNo = generateOrderNo();
-  const totalAmount = (amount / 100).toFixed(2);
+  const totalAmount = amount.toFixed(2);
 
-  return alipaySdk.exec('alipay.trade.page.pay', {
+  const paymentUrl = await sdk.exec('alipay.trade.page.pay', {
     method: 'GET',
     params: {
       out_trade_no: orderNo,
@@ -95,16 +109,20 @@ async function createAlipayOrder(amount: number, userId: string) {
     returnUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/profile?payment=success&orderNo=${orderNo}`,
     notifyUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/api/payment/alipay/notify`,
   });
+
+  return { paymentUrl, paymentId: orderNo };
 }
 
-async function createWechatOrder(amount: number, userId: string): Promise<{ pay_url: string }> {
+async function createWechatOrder(amount: number, userId: string): Promise<PaymentResult> {
+  const orderNo = generateOrderNo();
+
   if (!wechatPay) {
     return {
-      pay_url: `https://wx.tenpay.com/?amount=${amount}`,
+      paymentId: orderNo,
+      paymentUrl: `https://wx.tenpay.com/?amount=${amount}`,
     };
   }
 
-  const orderNo = generateOrderNo();
   const totalAmount = amount * 100;
 
   const result = await wechatPay.transactions_jsapi({
@@ -115,13 +133,13 @@ async function createWechatOrder(amount: number, userId: string): Promise<{ pay_
       total: totalAmount,
     },
     payer: {
-      // This is a demo OpenID fallback for development.
       openid: process.env.WECHAT_TEST_OPENID || 'oUpF8uMuAJO_M2pxb1Q9zNjWeS6o',
     },
   });
 
   return {
-    pay_url: result.pay_url || result.h5_url || result.code_url || `https://wx.tenpay.com/?amount=${amount}&uid=${userId}`,
+    paymentId: orderNo,
+    paymentUrl: result.pay_url || result.h5_url || result.code_url || `https://wx.tenpay.com/?amount=${amount}&uid=${userId}`,
   };
 }
 

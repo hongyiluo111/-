@@ -6,10 +6,9 @@ import { revalidatePath } from 'next/cache';
 
 export async function createOrder(userId: string, companionId: string, game: string, price: number) {
   try {
-    // 检查陪玩是否可用
     const companion = await prisma.companion.findUnique({
       where: { id: companionId },
-      select: { userId: true, status: true }
+      select: { userId: true, status: true, name: true, rank: true, avatar: true }
     });
 
     if (!companion) {
@@ -20,11 +19,13 @@ export async function createOrder(userId: string, companionId: string, game: str
       throw new Error('陪玩当前不可用');
     }
 
-    // 创建订单
     const order = await prisma.order.create({
       data: {
         userId,
         companionId,
+        companionName: companion.name,
+        companionRank: companion.rank,
+        companionAvatar: companion.avatar || '',
         game,
         price,
         status: 'pending',
@@ -82,9 +83,8 @@ export async function updateOrderStatus(orderId: string, newStatus: OrderStatus)
   }
 }
 
-export async function updatePaymentStatus(orderId: string, paymentStatus: string, paymentMethod?: string) {
+export async function updatePaymentStatus(orderId: string, paymentStatus: string, paymentMethod?: string, paymentId?: string) {
   try {
-    // 查找订单
     const order = await prisma.order.findUnique({
       where: { id: orderId }
     });
@@ -93,12 +93,12 @@ export async function updatePaymentStatus(orderId: string, paymentStatus: string
       throw new Error('订单不存在');
     }
 
-    // 更新支付状态
     const updatedOrder = await prisma.order.update({
       where: { id: orderId },
       data: {
         paymentStatus,
-        ...(paymentMethod && { paymentMethod })
+        ...(paymentMethod && { paymentMethod }),
+        ...(paymentId && { paymentId }),
       }
     });
 
@@ -113,16 +113,6 @@ export async function getUserOrders(userId: string) {
   try {
     const orders = await prisma.order.findMany({
       where: { userId },
-      include: {
-        companion: {
-          select: {
-            id: true,
-            name: true,
-            game: true,
-            rank: true
-          }
-        }
-      },
       orderBy: { createdAt: 'desc' }
     });
 

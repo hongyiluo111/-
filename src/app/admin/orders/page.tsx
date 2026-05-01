@@ -2,30 +2,11 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
+import { statusLabels, statusColors, paymentLabels } from '@/data/orderConstants';
+import { formatDate } from '@/utils/date';
+import AdminGuard from '@/components/AdminGuard';
 
 const ORDER_FILTER_STORAGE_KEY = 'admin_orders_filters_v1';
-
-const statusLabels: Record<string, string> = {
-  pending: '待接单',
-  accepted: '已接单',
-  in_progress: '进行中',
-  completed: '已完成',
-  cancelled: '已取消',
-};
-
-const statusColors: Record<string, string> = {
-  pending: 'bg-yellow-100 text-yellow-800',
-  accepted: 'bg-blue-100 text-blue-800',
-  in_progress: 'bg-purple-100 text-purple-800',
-  completed: 'bg-green-100 text-green-800',
-  cancelled: 'bg-red-100 text-red-800',
-};
-
-const paymentLabels: Record<string, string> = {
-  unpaid: '未支付',
-  paid: '已支付',
-  refunded: '已退款',
-};
 
 interface Order {
   id: string;
@@ -43,16 +24,6 @@ interface Order {
   createdAt: string;
   updatedAt: string;
   completedAt: string | null;
-}
-
-function formatDate(dateStr: string): string {
-  const date = new Date(dateStr);
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const d = String(date.getDate()).padStart(2, '0');
-  const h = String(date.getHours()).padStart(2, '0');
-  const min = String(date.getMinutes()).padStart(2, '0');
-  return `${y}-${m}-${d} ${h}:${min}`;
 }
 
 export default function AdminOrderManagement() {
@@ -164,6 +135,7 @@ export default function AdminOrderManagement() {
   };
 
   return (
+    <AdminGuard>
     <div className="min-h-screen bg-gray-50">
       <div className="bg-gradient-to-br from-primary via-[#1f7dd6] to-accent text-white py-14 px-4">
         <div className="container mx-auto max-w-6xl">
@@ -279,7 +251,7 @@ export default function AdminOrderManagement() {
                     </div>
                     <div className="flex items-center gap-4 sm:flex-shrink-0">
                       <div className="text-right">
-                        <div className="text-lg font-bold text-primary">💎{order.price}</div>
+                        <div className="text-lg font-bold text-primary">￥{order.price}</div>
                         <div className="text-xs text-gray-400">{formatDate(order.createdAt)}</div>
                       </div>
                     </div>
@@ -341,7 +313,7 @@ export default function AdminOrderManagement() {
                 </div>
                 <div className="p-3 bg-gray-50 rounded-lg">
                   <div className="text-xs text-gray-500">订单价格</div>
-                  <div className="mt-1 font-bold text-primary">💎{selectedOrder.price}</div>
+                  <div className="mt-1 font-bold text-primary">￥{selectedOrder.price}</div>
                 </div>
                 <div className="p-3 bg-gray-50 rounded-lg">
                   <div className="text-xs text-gray-500">支付方式</div>
@@ -398,5 +370,6 @@ export default function AdminOrderManagement() {
         </div>
       )}
     </div>
+    </AdminGuard>
   );
 }

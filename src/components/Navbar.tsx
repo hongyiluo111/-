@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { useState, useEffect, useRef } from 'react';
 import { useUserStore } from '@/store/user';
 import { useRouter, usePathname } from 'next/navigation';
+import { logoutUser } from '@/app/actions/auth.actions';
+import ThemeToggle from './ThemeToggle';
 
 export default function Navbar() {
   const router = useRouter();
@@ -76,7 +78,6 @@ export default function Navbar() {
 
   const handleLogout = async () => {
     try {
-      const { logoutUser } = await import('@/app/actions/auth.actions');
       const result = await logoutUser();
       if (result.success) {
         logout();
@@ -88,7 +89,7 @@ export default function Navbar() {
   };
 
   return (
-    <nav className={`fixed top-0 left-0 right-0 z-50 border-b border-white/60 bg-white/80 backdrop-blur-xl shadow-sm transition-transform duration-300 ${isVisible ? 'translate-y-0' : '-translate-y-full'}`}>
+    <nav className={`fixed top-0 left-0 right-0 z-50 border-b border-white/60 dark:border-gray-800/60 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl shadow-sm transition-transform duration-300 ${isVisible ? 'translate-y-0' : '-translate-y-full'}`}>
       <div className="absolute left-0 top-0 h-[2px] bg-gradient-to-r from-primary to-secondary transition-all duration-150" style={{ width: `${scrollProgress}%` }} />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
@@ -113,6 +114,7 @@ export default function Navbar() {
           </div>
           <div className="flex items-center">
             <div className="hidden md:flex items-center space-x-4">
+              <ThemeToggle />
               {user ? (
                 user.role === 'admin' ? (
                   <>
@@ -159,7 +161,7 @@ export default function Navbar() {
             <div className="flex items-center md:hidden">
               <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="inline-flex items-center justify-center p-2 rounded-xl text-gray-700 hover:text-primary hover:bg-primary/10 focus:outline-none"
+                className="inline-flex items-center justify-center p-2 rounded-xl text-gray-700 dark:text-gray-300 hover:text-primary hover:bg-primary/10 focus:outline-none"
               >
                 <svg
                   className="h-6 w-6"
@@ -192,8 +194,11 @@ export default function Navbar() {
 
       {/* 移动端菜单 */}
       {isOpen && (
-        <div className="md:hidden border-t border-gray-100 bg-white/95 backdrop-blur">
+        <div className="md:hidden border-t border-gray-100 dark:border-gray-800 bg-white/95 dark:bg-gray-900/95 backdrop-blur">
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+            <div className="px-3 py-2">
+              <ThemeToggle />
+            </div>
             <Link href="/" className={`block nav-link ${isActive('/') ? 'nav-link-active' : ''}`}>
               首页
             </Link>

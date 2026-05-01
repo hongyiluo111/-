@@ -1,10 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const API_KEY = 'sk-f8750fd1ddd84e1dbf93d8ababd0756b';
+const API_KEY = process.env.QWEN_API_KEY;
 const API_URL = 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions';
 
 export async function POST(request: NextRequest) {
   try {
+    if (!API_KEY) {
+      return NextResponse.json(
+        { error: 'AI 服务未配置' },
+        { status: 503 }
+      );
+    }
+
     const body = await request.json();
     const { messages, model = 'qwen-turbo', temperature = 0.7 } = body;
 
