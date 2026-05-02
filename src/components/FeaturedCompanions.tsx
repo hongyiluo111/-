@@ -2,13 +2,22 @@
 
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
-import { allCompanions, type Companion } from '@/data/companions';
 import { getGameColor, getGameGradientStyle } from '@/data/gameColors';
 import BookingModal from './BookingModal';
 import ChatModal from './ChatModal';
 import TiltCard from './TiltCard';
 import MagneticButton from './MagneticButton';
 import { useInView } from '@/hooks/useInView';
+
+interface Companion {
+  id: string;
+  name: string;
+  game: string;
+  rank: string;
+  price: number;
+  description: string;
+  avatar: string;
+}
 
 function FeaturedCompanionCard({ companion, index }: { companion: Companion; index: number }) {
   const [showChat, setShowChat] = useState(false);
@@ -93,9 +102,22 @@ export default function FeaturedCompanions() {
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    const shuffled = [...allCompanions].sort(() => Math.random() - 0.5);
-    setFeaturedCompanions(shuffled.slice(0, 8));
-    setIsReady(true);
+    const fetchCompanions = async () => {
+      try {
+        const response = await fetch('/api/companions');
+        if (response.ok) {
+          const data = await response.json();
+          const shuffled = (data.companions || []).sort(() => Math.random() - 0.5);
+          setFeaturedCompanions(shuffled.slice(0, 8));
+        }
+      } catch (error) {
+        console.error('获取陪玩列表失败:', error);
+      } finally {
+        setIsReady(true);
+      }
+    };
+
+    fetchCompanions();
   }, []);
 
   if (!isReady) return null;

@@ -2,13 +2,22 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
-import { allCompanions, type Companion } from '@/data/companions';
 import { getGameColor } from '@/data/gameColors';
 import { useUserStore } from '@/store/user';
 import BookingModal from './BookingModal';
 import ChatModal from './ChatModal';
 import TiltCard from './TiltCard';
 import MagneticButton from './MagneticButton';
+
+interface Companion {
+  id: string;
+  name: string;
+  game: string;
+  rank: string;
+  price: number;
+  description: string;
+  avatar: string;
+}
 
 const ITEMS_PER_PAGE = 16;
 const LOGIN_ALERT_DURATION = 3000;
@@ -40,6 +49,8 @@ function matchesPriceRange(price: number, priceRange: string) {
 
 export default function CompanionList({ filters }: CompanionListProps) {
   const { user, setUser } = useUserStore();
+  const [companions, setCompanions] = useState<Companion[]>([]);
+  const [loading, setLoading] = useState(true);
   const [chatCompanion, setChatCompanion] = useState<string | null>(null);
   const [bookingCompanion, setBookingCompanion] = useState<Companion | null>(null);
   const [showLoginAlert, setShowLoginAlert] = useState(false);
@@ -47,6 +58,25 @@ export default function CompanionList({ filters }: CompanionListProps) {
   const [visibleCardIds, setVisibleCardIds] = useState<Record<string, boolean>>({});
   const loginAlertTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const observerRef = useRef<IntersectionObserver | null>(null);
+
+  // 从 API 获取陪玩数据
+  useEffect(() => {
+    const fetchCompanions = async () => {
+      try {
+        const response = await fetch('/api/companions');
+        if (response.ok) {
+          const data = await response.json();
+          setCompanions(data.companions || []);
+        }
+      } catch (error) {
+        console.error('获取陪玩列表失败:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCompanions();
+  }, []);
 
   useEffect(() => {
     if (user) {
@@ -84,7 +114,7 @@ export default function CompanionList({ filters }: CompanionListProps) {
   }, []);
 
   const filteredCompanions = useMemo(() => {
-    return allCompanions.filter((companion) => {
+    return companions.filter((companion) => {
       if (filters?.game && companion.game !== filters.game) {
         return false;
       }
@@ -95,7 +125,7 @@ export default function CompanionList({ filters }: CompanionListProps) {
 
       return matchesPriceRange(companion.price, filters?.priceRange || '');
     });
-  }, [filters]);
+  }, [companions, filters]);
 
   const totalPages = Math.ceil(filteredCompanions.length / ITEMS_PER_PAGE);
 
@@ -163,7 +193,11 @@ export default function CompanionList({ filters }: CompanionListProps) {
         <p className="text-gray-500">根据筛选条件展示匹配结果</p>
       </div>
 
-      {filteredCompanions.length === 0 ? (
+      {loading ? (
+        <div className="flex justify-center py-12">
+          <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-primary"></div>
+        </div>
+      ) : filteredCompanions.length === 0 ? (
         <div className="py-12 text-center text-gray-500">
           <p className="text-lg">暂无符合条件的陪玩</p>
           <p className="mt-2 text-sm">请尝试调整筛选条件</p>
