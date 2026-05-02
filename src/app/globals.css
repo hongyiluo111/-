@@ -287,7 +287,7 @@ a.btn:focus-visible {
   transform: translateY(0) scale(1);
 }
 
-/* 滚动条样式 - 浮层滚动条（不占空间） */
+/* 滚动条样式 - 圆角灰条 */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -298,35 +298,30 @@ a.btn:focus-visible {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.2);
+  background: #d1d5db;
   border-radius: 100px;
-  border: 1px solid transparent;
-  background-clip: content-box;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 0, 0, 0.35);
-  background-clip: content-box;
+  background: #9ca3af;
 }
 
 .dark ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
-  background-clip: content-box;
+  background: #4b5563;
 }
 
 .dark ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.35);
-  background-clip: content-box;
+  background: #6b7280;
 }
 
 /* Firefox 滚动条 */
 * {
   scrollbar-width: thin;
-  scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+  scrollbar-color: #d1d5db transparent;
 }
 
 .dark * {
-  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+  scrollbar-color: #4b5563 transparent;
 }
 
 /* 平滑滚动 */
