@@ -37,7 +37,7 @@ function Particles() {
 
 const heroGames = [
   '三角洲行动', '王者荣耀', '英雄联盟', '和平精英',
-  'CS2', 'VALORANT', '穿越火线', '金铲铲之战'
+  'CS2', '无畏契约', '穿越火线', '金铲铲之战'
 ];
 
 export default function Hero() {

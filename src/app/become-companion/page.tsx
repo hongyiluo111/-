@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-const games = ['三角洲行动', '王者荣耀', '英雄联盟', '和平精英', 'CS2', 'DOTA2', 'VALORANT', '金铲铲之战'];
+const games = ['三角洲行动', '王者荣耀', '英雄联盟', '和平精英', 'CS2', 'DOTA2', '无畏契约', '金铲铲之战'];
 const ranks = ['青铜', '白银', '黄金', '铂金', '钻石', '大师', '王者'];
 
 export default function BecomeCompanionPage() {
