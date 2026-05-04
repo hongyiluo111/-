@@ -27,7 +27,9 @@ export default function ChatModal({ receiverId, receiverName, onClose }: ChatMod
 
   const loadHistory = useCallback(async () => {
     try {
-      const response = await fetch(`/api/chat/messages?receiverId=${receiverId}`);
+      const response = await fetch(`/api/chat/messages?receiverId=${receiverId}`, {
+        credentials: 'include',
+      });
       if (response.ok) {
         const data = await response.json();
         setChatHistory(data.messages || []);
@@ -64,6 +66,7 @@ export default function ChatModal({ receiverId, receiverName, onClose }: ChatMod
     try {
       const response = await fetch('/api/chat/messages', {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ receiverId, content: trimmed }),
       });

@@ -108,7 +108,10 @@ export default function CompanionList({ filters }: CompanionListProps) {
   useEffect(() => {
     const sendHeartbeat = async () => {
       try {
-        await fetch('/api/user/online', { method: 'POST' });
+        await fetch('/api/user/online', {
+          method: 'POST',
+          credentials: 'include',
+        });
       } catch (error) {
         // 忽略心跳错误
       }
@@ -155,18 +158,24 @@ export default function CompanionList({ filters }: CompanionListProps) {
   }, []);
 
   const filteredCompanions = useMemo(() => {
-    return companions.filter((companion) => {
-      if (filters?.game && companion.game !== filters.game) {
-        return false;
-      }
+    return companions
+      .filter((companion) => {
+        if (filters?.game && companion.game !== filters.game) {
+          return false;
+        }
 
-      if (filters?.rank && companion.rank !== filters.rank) {
-        return false;
-      }
+        if (filters?.rank && companion.rank !== filters.rank) {
+          return false;
+        }
 
-      return matchesPriceRange(companion.price, filters?.priceRange || '');
-    });
-  }, [companions, filters]);
+        return matchesPriceRange(companion.price, filters?.priceRange || '');
+      })
+      .sort((a, b) => {
+        const aOnline = onlineStatus[a.userId] ? 1 : 0;
+        const bOnline = onlineStatus[b.userId] ? 1 : 0;
+        return bOnline - aOnline; // 在线的排在前面
+      });
+  }, [companions, filters, onlineStatus]);
 
   const totalPages = Math.ceil(filteredCompanions.length / ITEMS_PER_PAGE);
 

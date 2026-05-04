@@ -39,6 +39,24 @@ export default function Navbar() {
     loadUser();
   }, [setUser]);
 
+  // 心跳：更新在线状态
+  useEffect(() => {
+    const sendHeartbeat = async () => {
+      try {
+        await fetch('/api/user/online', {
+          method: 'POST',
+          credentials: 'include',
+        });
+      } catch {
+        // 忽略心跳错误
+      }
+    };
+
+    sendHeartbeat();
+    const interval = setInterval(sendHeartbeat, 60000);
+    return () => clearInterval(interval);
+  }, []);
+
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
