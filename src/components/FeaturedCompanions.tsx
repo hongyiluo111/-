@@ -40,15 +40,21 @@ function FeaturedCompanionCard({ companion, index }: { companion: Companion; ind
           <div className="h-2 -mx-6 -mt-6 mb-4" style={getGameGradientStyle(companion.game)} />
           <div className="flex items-center mb-4">
             <div className="relative">
-              <div className="w-16 h-16 rounded-full overflow-hidden ring-2 ring-primary ring-offset-2">
-                <Image
-                  src={companion.avatar}
-                  alt={companion.name}
-                  width={64}
-                  height={64}
-                  sizes="64px"
-                  className="w-full h-full object-cover"
-                />
+              <div className="w-16 h-16 rounded-full overflow-hidden ring-2 ring-primary ring-offset-2 bg-gray-200">
+                {companion.avatar ? (
+                  <Image
+                    src={companion.avatar}
+                    alt={companion.name}
+                    width={64}
+                    height={64}
+                    sizes="64px"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-2xl text-gray-400">
+                    {companion.name.charAt(0)}
+                  </div>
+                )}
               </div>
               <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-white dark:border-gray-800" title="在线" />
             </div>
