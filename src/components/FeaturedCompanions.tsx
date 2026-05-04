@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { getGameColor, getGameGradientStyle } from '@/data/gameColors';
+import { useUserStore } from '@/store/user';
 import BookingModal from './BookingModal';
 import ChatModal from './ChatModal';
 import TiltCard from './TiltCard';
@@ -11,6 +12,7 @@ import { useInView } from '@/hooks/useInView';
 
 interface Companion {
   id: string;
+  userId: string;
   name: string;
   game: string;
   rank: string;
@@ -19,7 +21,8 @@ interface Companion {
   avatar: string;
 }
 
-function FeaturedCompanionCard({ companion, index }: { companion: Companion; index: number }) {
+function FeaturedCompanionCard({ companion, index, isOnline }: { companion: Companion; index: number; isOnline: boolean }) {
+  const { user } = useUserStore();
   const [showChat, setShowChat] = useState(false);
   const [showBooking, setShowBooking] = useState(false);
   const gameColor = getGameColor(companion.game);
@@ -56,7 +59,12 @@ function FeaturedCompanionCard({ companion, index }: { companion: Companion; ind
                   </div>
                 )}
               </div>
-              <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-white dark:border-gray-800" title="在线" />
+              <div
+                className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-2 border-white dark:border-gray-800 ${
+                  isOnline ? 'bg-green-500' : 'bg-red-500'
+                }`}
+                title={isOnline ? '在线' : '离线'}
+              />
             </div>
             <div className="ml-3">
               <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">{companion.name}</h3>
@@ -73,7 +81,13 @@ function FeaturedCompanionCard({ companion, index }: { companion: Companion; ind
             </div>
             <div className="flex space-x-2">
               <MagneticButton
-                onClick={() => setShowChat(true)}
+                onClick={() => {
+                  if (user) {
+                    setShowChat(true);
+                  } else {
+                    alert('请先登录');
+                  }
+                }}
                 className="px-3 py-1.5 text-sm bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-lg transition-colors"
                 strength={8}
               >
@@ -93,7 +107,11 @@ function FeaturedCompanionCard({ companion, index }: { companion: Companion; ind
       </div>
 
       {showChat && (
-        <ChatModal companionName={companion.name} onClose={() => setShowChat(false)} />
+        <ChatModal
+          receiverId={companion.userId}
+          receiverName={companion.name}
+          onClose={() => setShowChat(false)}
+        />
       )}
 
       {showBooking && (
@@ -105,6 +123,7 @@ function FeaturedCompanionCard({ companion, index }: { companion: Companion; ind
 
 export default function FeaturedCompanions() {
   const [featuredCompanions, setFeaturedCompanions] = useState<Companion[]>([]);
+  const [onlineStatus, setOnlineStatus] = useState<Record<string, boolean>>({});
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
@@ -126,6 +145,28 @@ export default function FeaturedCompanions() {
     fetchCompanions();
   }, []);
 
+  // 获取在线状态
+  useEffect(() => {
+    if (featuredCompanions.length === 0) return;
+
+    const fetchOnlineStatus = async () => {
+      try {
+        const userIds = featuredCompanions.map((c) => c.userId).join(',');
+        const response = await fetch(`/api/user/status?userIds=${userIds}`);
+        if (response.ok) {
+          const data = await response.json();
+          setOnlineStatus(data.status || {});
+        }
+      } catch (error) {
+        console.error('获取在线状态失败:', error);
+      }
+    };
+
+    fetchOnlineStatus();
+    const interval = setInterval(fetchOnlineStatus, 30000);
+    return () => clearInterval(interval);
+  }, [featuredCompanions]);
+
   if (!isReady) return null;
 
   return (
@@ -136,7 +177,12 @@ export default function FeaturedCompanions() {
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {featuredCompanions.map((companion, index) => (
-          <FeaturedCompanionCard key={companion.id} companion={companion} index={index} />
+          <FeaturedCompanionCard
+            key={companion.id}
+            companion={companion}
+            index={index}
+            isOnline={onlineStatus[companion.userId] || false}
+          />
         ))}
       </div>
       <div className="mt-12 text-center">

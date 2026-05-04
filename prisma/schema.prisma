@@ -9,7 +9,6 @@ generator client {
 
 datasource db {
   provider = "mysql"
-  url      = env("DATABASE_URL")
 }
 
 // 用户模型
@@ -20,6 +19,7 @@ model User {
   name      String
   role      String   @default("user")
   status    String   @default("active")
+  lastSeen  DateTime @default(now())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -27,7 +27,8 @@ model User {
   companions Companion[]
   orders     Order[]
   notifications Notification[]
-  chatMessages ChatMessage[]
+  sentMessages     ChatMessage[] @relation("SentMessages")
+  receivedMessages ChatMessage[] @relation("ReceivedMessages")
 }
 
 // 陪玩模型
@@ -87,16 +88,16 @@ model Notification {
 
 // 聊天记录模型
 model ChatMessage {
-  id            String   @id @default(cuid())
-  userId        String
-  companionName String
-  role          String
-  content       String   @db.Text
-  createdAt     DateTime @default(now())
+  id         String   @id @default(cuid())
+  senderId   String
+  receiverId String
+  content    String   @db.Text
+  createdAt  DateTime @default(now())
 
   // 关联
-  user User @relation(fields: [userId], references: [id])
+  sender   User @relation("SentMessages", fields: [senderId], references: [id])
+  receiver User @relation("ReceivedMessages", fields: [receiverId], references: [id])
 
-  @@index([userId, companionName])
-  @@index([userId])
+  @@index([senderId, receiverId])
+  @@index([receiverId])
 }

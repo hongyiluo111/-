@@ -11,6 +11,7 @@ import MagneticButton from './MagneticButton';
 
 interface Companion {
   id: string;
+  userId: string;
   name: string;
   game: string;
   rank: string;
@@ -50,8 +51,9 @@ function matchesPriceRange(price: number, priceRange: string) {
 export default function CompanionList({ filters }: CompanionListProps) {
   const { user, setUser } = useUserStore();
   const [companions, setCompanions] = useState<Companion[]>([]);
+  const [onlineStatus, setOnlineStatus] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(true);
-  const [chatCompanion, setChatCompanion] = useState<string | null>(null);
+  const [chatCompanion, setChatCompanion] = useState<Companion | null>(null);
   const [bookingCompanion, setBookingCompanion] = useState<Companion | null>(null);
   const [showLoginAlert, setShowLoginAlert] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -76,6 +78,45 @@ export default function CompanionList({ filters }: CompanionListProps) {
     };
 
     fetchCompanions();
+  }, []);
+
+  // 获取在线状态
+  useEffect(() => {
+    if (companions.length === 0) return;
+
+    const fetchOnlineStatus = async () => {
+      try {
+        const userIds = companions.map((c) => c.userId).join(',');
+        const response = await fetch(`/api/user/status?userIds=${userIds}`);
+        if (response.ok) {
+          const data = await response.json();
+          setOnlineStatus(data.status || {});
+        }
+      } catch (error) {
+        console.error('获取在线状态失败:', error);
+      }
+    };
+
+    fetchOnlineStatus();
+
+    // 每 30 秒更新一次在线状态
+    const interval = setInterval(fetchOnlineStatus, 30000);
+    return () => clearInterval(interval);
+  }, [companions]);
+
+  // 心跳：更新当前用户的在线状态
+  useEffect(() => {
+    const sendHeartbeat = async () => {
+      try {
+        await fetch('/api/user/online', { method: 'POST' });
+      } catch (error) {
+        // 忽略心跳错误
+      }
+    };
+
+    sendHeartbeat();
+    const interval = setInterval(sendHeartbeat, 60000); // 每分钟心跳
+    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
@@ -207,6 +248,7 @@ export default function CompanionList({ filters }: CompanionListProps) {
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {paginatedCompanions.map((companion) => {
               const gameColor = getGameColor(companion.game);
+              const isOnline = onlineStatus[companion.userId] || false;
 
               return (
                 <TiltCard
@@ -229,17 +271,28 @@ export default function CompanionList({ filters }: CompanionListProps) {
                   <div className="p-5">
                     <div className="mb-4 flex items-center">
                       <div className="relative">
-                        <div className="h-16 w-16 overflow-hidden rounded-full ring-2 ring-primary ring-offset-2">
-                          <Image
-                            src={companion.avatar}
-                            alt={companion.name}
-                            width={64}
-                            height={64}
-                            sizes="64px"
-                            className="h-full w-full object-cover"
-                          />
+                        <div className="h-16 w-16 overflow-hidden rounded-full ring-2 ring-primary ring-offset-2 bg-gray-200">
+                          {companion.avatar ? (
+                            <Image
+                              src={companion.avatar}
+                              alt={companion.name}
+                              width={64}
+                              height={64}
+                              sizes="64px"
+                              className="h-full w-full object-cover"
+                            />
+                          ) : (
+                            <div className="flex h-full w-full items-center justify-center text-2xl text-gray-400">
+                              {companion.name.charAt(0)}
+                            </div>
+                          )}
                         </div>
-                        <div className="absolute -bottom-1 -right-1 h-5 w-5 rounded-full border-2 border-white bg-green-500" />
+                        <div
+                          className={`absolute -bottom-1 -right-1 h-5 w-5 rounded-full border-2 border-white ${
+                            isOnline ? 'bg-green-500' : 'bg-red-500'
+                          }`}
+                          title={isOnline ? '在线' : '离线'}
+                        />
                       </div>
 
                       <div className="ml-3">
@@ -260,7 +313,13 @@ export default function CompanionList({ filters }: CompanionListProps) {
 
                       <div className="flex space-x-2">
                         <MagneticButton
-                          onClick={() => setChatCompanion(companion.name)}
+                          onClick={() => {
+                            if (isLoggedIn()) {
+                              setChatCompanion(companion);
+                              return;
+                            }
+                            showLoginPrompt();
+                          }}
                           className="rounded-xl bg-gray-100 px-3 py-1.5 text-sm text-gray-700 transition-colors hover:bg-gray-200"
                           strength={8}
                         >
@@ -272,7 +331,6 @@ export default function CompanionList({ filters }: CompanionListProps) {
                               setBookingCompanion(companion);
                               return;
                             }
-
                             showLoginPrompt();
                           }}
                           className={`rounded-xl bg-gradient-to-r px-3 py-1.5 text-sm text-white transition-all hover:shadow-md ${gameColor}`}
@@ -322,7 +380,13 @@ export default function CompanionList({ filters }: CompanionListProps) {
         </>
       )}
 
-      {chatCompanion && <ChatModal companionName={chatCompanion} onClose={() => setChatCompanion(null)} />}
+      {chatCompanion && (
+        <ChatModal
+          receiverId={chatCompanion.userId}
+          receiverName={chatCompanion.name}
+          onClose={() => setChatCompanion(null)}
+        />
+      )}
       {bookingCompanion && <BookingModal companion={bookingCompanion} onClose={() => setBookingCompanion(null)} />}
 
       {showLoginAlert && (

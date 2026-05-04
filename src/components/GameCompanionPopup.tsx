@@ -1,12 +1,22 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { allCompanions, type Companion } from '@/data/companions';
 import { getGameGradientStyle } from '@/data/gameColors';
 import BookingModal from './BookingModal';
 import ChatModal from './ChatModal';
+
+interface Companion {
+  id: string;
+  userId: string;
+  name: string;
+  game: string;
+  rank: string;
+  price: number;
+  description: string;
+  avatar: string;
+}
 
 interface Props {
   game: string;
@@ -14,12 +24,28 @@ interface Props {
 }
 
 export default function GameCompanionPopup({ game, onClose }: Props) {
+  const [companions, setCompanions] = useState<Companion[]>([]);
   const [showChat, setShowChat] = useState<Companion | null>(null);
   const [showBooking, setShowBooking] = useState<Companion | null>(null);
 
-  const companions = allCompanions
-    .filter((c) => c.game === game)
-    .slice(0, 4);
+  useEffect(() => {
+    const fetchCompanions = async () => {
+      try {
+        const response = await fetch('/api/companions');
+        if (response.ok) {
+          const data = await response.json();
+          const filtered = (data.companions || [])
+            .filter((c: Companion) => c.game === game)
+            .slice(0, 4);
+          setCompanions(filtered);
+        }
+      } catch (error) {
+        console.error('获取陪玩列表失败:', error);
+      }
+    };
+
+    fetchCompanions();
+  }, [game]);
 
   return (
     <>
@@ -50,15 +76,21 @@ export default function GameCompanionPopup({ game, onClose }: Props) {
             {companions.map((companion) => (
               <div key={companion.id} className="flex items-center gap-4 px-5 py-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
                 <div className="relative flex-shrink-0">
-                  <div className="w-12 h-12 rounded-full overflow-hidden ring-2 ring-primary/30">
-                    <Image
-                      src={companion.avatar}
-                      alt={companion.name}
-                      width={48}
-                      height={48}
-                      sizes="48px"
-                      className="w-full h-full object-cover"
-                    />
+                  <div className="w-12 h-12 rounded-full overflow-hidden ring-2 ring-primary/30 bg-gray-200">
+                    {companion.avatar ? (
+                      <Image
+                        src={companion.avatar}
+                        alt={companion.name}
+                        width={48}
+                        height={48}
+                        sizes="48px"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-lg text-gray-400">
+                        {companion.name.charAt(0)}
+                      </div>
+                    )}
                   </div>
                   <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-green-500 rounded-full border-2 border-white dark:border-gray-900" />
                 </div>
@@ -103,7 +135,11 @@ export default function GameCompanionPopup({ game, onClose }: Props) {
       </div>
 
       {showChat && (
-        <ChatModal companionName={showChat.name} onClose={() => setShowChat(null)} />
+        <ChatModal
+          receiverId={showChat.userId}
+          receiverName={showChat.name}
+          onClose={() => setShowChat(null)}
+        />
       )}
       {showBooking && (
         <BookingModal companion={showBooking} onClose={() => setShowBooking(null)} />
