@@ -11,6 +11,7 @@ interface Conversation {
   lastMessage: string;
   lastTime: string;
   unread: number;
+  isFriend: boolean;
 }
 
 export default function MessagesPage() {
@@ -25,10 +26,21 @@ export default function MessagesPage() {
 
     const fetchConversations = async () => {
       try {
-        const res = await fetch('/api/chat/conversations', { credentials: 'include' });
-        if (res.ok) {
-          const data = await res.json();
-          setConversations(data.conversations || []);
+        const [convRes, friendRes] = await Promise.all([
+          fetch('/api/chat/conversations', { credentials: 'include' }),
+          fetch('/api/friends', { credentials: 'include' }),
+        ]);
+        if (convRes.ok) {
+          const convData = await convRes.json();
+          const friendData = friendRes.ok ? await friendRes.json() : { friends: [] };
+          const friendIds = new Set(friendData.friends?.map((f: { userId: string }) => f.userId) || []);
+
+          setConversations(
+            (convData.conversations || []).map((c: Conversation) => ({
+              ...c,
+              isFriend: friendIds.has(c.userId),
+            }))
+          );
         }
       } catch { /* ignore */ }
       setLoading(false);
@@ -71,21 +83,28 @@ export default function MessagesPage() {
                   onClick={() => setActiveChat({ userId: conv.userId, userName: conv.userName })}
                   className="flex items-center gap-4 py-4 px-2 cursor-pointer hover:bg-gray-50 rounded-xl transition-colors"
                 >
-                  <div className="flex-shrink-0 w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-lg">
-                    {conv.userName.charAt(0)}
+                  <div className="relative flex-shrink-0">
+                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-lg">
+                      {conv.userName.charAt(0)}
+                    </div>
+                    {conv.unread > 0 && (
+                      <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center font-bold">
+                        {conv.unread > 9 ? '9+' : conv.unread}
+                      </span>
+                    )}
                   </div>
                   <div className="flex-grow min-w-0">
                     <div className="flex justify-between items-center">
-                      <span className="font-semibold text-gray-800">{conv.userName}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-gray-800">{conv.userName}</span>
+                        {!conv.isFriend && (
+                          <span className="text-xs text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">临时会话</span>
+                        )}
+                      </div>
                       <span className="text-xs text-gray-400">{new Date(conv.lastTime).toLocaleTimeString()}</span>
                     </div>
                     <p className="text-sm text-gray-500 truncate">{conv.lastMessage}</p>
                   </div>
-                  {conv.unread > 0 && (
-                    <span className="flex-shrink-0 h-6 w-6 rounded-full bg-red-500 text-white text-xs flex items-center justify-center font-bold">
-                      {conv.unread > 9 ? '9+' : conv.unread}
-                    </span>
-                  )}
                 </div>
               ))}
             </div>

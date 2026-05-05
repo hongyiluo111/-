@@ -16,9 +16,22 @@ export default function Navbar() {
   const [scrollProgress, setScrollProgress] = useState(0);
   const [unreadCount, setUnreadCount] = useState(0);
   const [toast, setToast] = useState<{ sender: string; content: string } | null>(null);
+  const [showSettings, setShowSettings] = useState(false);
   const lastScrollY = useRef(0);
   const scrollTimeout = useRef<NodeJS.Timeout | null>(null);
   const toastTimeout = useRef<NodeJS.Timeout | null>(null);
+  const settingsRef = useRef<HTMLDivElement>(null);
+
+  // 点击外部关闭设置菜单
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (settingsRef.current && !settingsRef.current.contains(e.target as Node)) {
+        setShowSettings(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, []);
 
   const isActive = (path: string) => {
     if (path === '/') return pathname === '/';
@@ -137,7 +150,26 @@ export default function Navbar() {
             </div>
             <div className="flex items-center">
               <div className="hidden md:flex items-center space-x-4">
-                <ThemeToggle />
+                {/* 设置按钮 */}
+                <div className="relative" ref={settingsRef}>
+                  <button
+                    onClick={() => setShowSettings(!showSettings)}
+                    className="nav-link p-2"
+                    title="设置"
+                  >
+                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                  </button>
+                  {showSettings && (
+                    <div className="absolute right-0 top-full mt-2 w-48 rounded-xl bg-white dark:bg-gray-800 shadow-xl border border-gray-200 dark:border-gray-700 py-2 z-50">
+                      <div className="px-4 py-2">
+                        <ThemeToggle />
+                      </div>
+                    </div>
+                  )}
+                </div>
                 {user ? (
                   user.role === 'admin' ? (
                     <>

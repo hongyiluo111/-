@@ -236,6 +236,25 @@ export default function CompanionList({ filters }: CompanionListProps) {
 
   const isLoggedIn = () => !!user;
 
+  const handleAddFriend = async (companion: Companion) => {
+    try {
+      const res = await fetch('/api/friends', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ friendId: companion.userId }),
+      });
+      if (res.ok) {
+        alert(`已向 ${companion.name} 发送好友请求`);
+      } else {
+        const data = await res.json();
+        alert(data.error || '添加失败');
+      }
+    } catch {
+      alert('网络错误');
+    }
+  };
+
   return (
     <div>
       <div className="mb-10 text-center">
@@ -333,6 +352,19 @@ export default function CompanionList({ filters }: CompanionListProps) {
                           strength={8}
                         >
                           聊天
+                        </MagneticButton>
+                        <MagneticButton
+                          onClick={() => {
+                            if (isLoggedIn()) {
+                              handleAddFriend(companion);
+                              return;
+                            }
+                            showLoginPrompt();
+                          }}
+                          className="rounded-xl border border-primary/30 bg-white px-3 py-1.5 text-sm text-primary transition-colors hover:bg-primary/5"
+                          strength={8}
+                        >
+                          好友
                         </MagneticButton>
                         <MagneticButton
                           onClick={() => {
