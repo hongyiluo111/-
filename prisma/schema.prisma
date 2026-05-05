@@ -48,7 +48,7 @@ model Companion {
   updatedAt   DateTime @updatedAt
 
   // 关联
-  user   User    @relation(fields: [userId], references: [id])
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 // 订单模型
@@ -70,7 +70,7 @@ model Order {
   completedAt     DateTime?
 
   // 关联
-  user User @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 // 通知模型
@@ -85,7 +85,7 @@ model Notification {
   createdAt DateTime @default(now())
 
   // 关联
-  user User @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 // 聊天记录模型
@@ -97,8 +97,8 @@ model ChatMessage {
   createdAt  DateTime @default(now())
 
   // 关联
-  sender   User @relation("SentMessages", fields: [senderId], references: [id])
-  receiver User @relation("ReceivedMessages", fields: [receiverId], references: [id])
+  sender   User @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver User @relation("ReceivedMessages", fields: [receiverId], references: [id], onDelete: Cascade)
 
   @@index([senderId, receiverId])
   @@index([receiverId])

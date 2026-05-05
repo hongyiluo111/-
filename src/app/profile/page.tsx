@@ -21,7 +21,20 @@ export default function ProfilePage() {
   const [savingProfile, setSavingProfile] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const [name, setName] = useState('');
-  const [diamonds, setDiamonds] = useState(1000);
+  const [diamonds, setDiamonds] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('diamonds');
+      return saved ? parseInt(saved, 10) : 1000;
+    }
+    return 1000;
+  });
+
+  // 保持 diamonds 持久化
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('diamonds', String(diamonds));
+    }
+  }, [diamonds]);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [currentRechargeAmount, setCurrentRechargeAmount] = useState(50);
   const [statusMessage, setStatusMessage] = useState('');
