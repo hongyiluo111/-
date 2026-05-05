@@ -125,34 +125,34 @@ export default function OrderManagement() {
 
       <div className="container mx-auto max-w-6xl px-4 py-8">
         <div className="mb-8 grid grid-cols-2 gap-4 md:grid-cols-4">
-          <div className="rounded-2xl bg-white/90 p-4 text-center shadow-md">
+          <div className="rounded-2xl bg-white/90 dark:bg-gray-800/90 p-4 text-center shadow-md">
             <div className="text-2xl font-bold text-primary">{orderStats.total}</div>
-            <div className="mt-1 text-sm text-gray-500">总订单</div>
+            <div className="mt-1 text-sm text-gray-500 dark:text-gray-400">总订单</div>
           </div>
-          <div className="rounded-2xl bg-white/90 p-4 text-center shadow-md">
+          <div className="rounded-2xl bg-white/90 dark:bg-gray-800/90 p-4 text-center shadow-md">
             <div className="text-2xl font-bold text-yellow-600">{orderStats.pending}</div>
-            <div className="mt-1 text-sm text-gray-500">待接单</div>
+            <div className="mt-1 text-sm text-gray-500 dark:text-gray-400">待接单</div>
           </div>
-          <div className="rounded-2xl bg-white/90 p-4 text-center shadow-md">
+          <div className="rounded-2xl bg-white/90 dark:bg-gray-800/90 p-4 text-center shadow-md">
             <div className="text-2xl font-bold text-purple-600">{orderStats.in_progress}</div>
-            <div className="mt-1 text-sm text-gray-500">进行中</div>
+            <div className="mt-1 text-sm text-gray-500 dark:text-gray-400">进行中</div>
           </div>
-          <div className="rounded-2xl bg-white/90 p-4 text-center shadow-md">
+          <div className="rounded-2xl bg-white/90 dark:bg-gray-800/90 p-4 text-center shadow-md">
             <div className="text-2xl font-bold text-green-600">{orderStats.completed}</div>
-            <div className="mt-1 text-sm text-gray-500">已完成</div>
+            <div className="mt-1 text-sm text-gray-500 dark:text-gray-400">已完成</div>
           </div>
         </div>
 
-        <div className="rounded-2xl border border-white/90 bg-white/90 p-6 shadow-lg">
+        <div className="rounded-2xl border border-white/90 dark:border-gray-700 bg-white/90 dark:bg-gray-800/90 p-6 shadow-lg">
           <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-            <h2 className="text-xl font-semibold">我的订单</h2>
+            <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100">我的订单</h2>
             <div className="flex flex-wrap gap-2">
               {filterOptions.map((option) => (
                 <button
                   key={option.value}
                   onClick={() => setStatusFilter(option.value)}
                   className={`rounded-lg px-3 py-1.5 text-sm transition-colors ${
-                    statusFilter === option.value ? 'bg-primary text-white shadow-sm' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    statusFilter === option.value ? 'bg-primary text-white shadow-sm' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                   }`}
                 >
                   {option.label}
@@ -182,7 +182,7 @@ export default function OrderManagement() {
               {filteredOrders.map((order) => (
                 <div
                   key={order.id}
-                  className="cursor-pointer rounded-2xl border border-gray-200/80 bg-white/80 p-4 transition-all hover:-translate-y-0.5 hover:shadow-md"
+                  className="cursor-pointer rounded-2xl border border-gray-200/80 dark:border-gray-700 bg-white/80 dark:bg-gray-800/80 p-4 transition-all hover:-translate-y-0.5 hover:shadow-md"
                   onClick={() => setSelectedOrder(order)}
                 >
                   <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
@@ -205,7 +205,7 @@ export default function OrderManagement() {
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className="font-semibold text-gray-800">{order.companionName}</span>
+                          <span className="font-semibold text-gray-800 dark:text-gray-100">{order.companionName}</span>
                           <span className={`rounded-full px-2 py-0.5 text-xs ${statusColors[order.status]}`}>
                             {statusLabels[order.status]}
                           </span>
@@ -232,7 +232,7 @@ export default function OrderManagement() {
 
       {selectedOrder && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 p-4">
-          <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-3xl bg-white">
+          <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-3xl bg-white dark:bg-gray-800">
             <div className="rounded-t-3xl bg-gradient-to-r from-primary to-accent p-6 text-white">
               <div className="flex items-center justify-between">
                 <h3 className="text-xl font-bold">订单详情</h3>
@@ -262,7 +262,7 @@ export default function OrderManagement() {
                 </div>
                 <div>
                   <h4 className="text-lg font-semibold">{selectedOrder.companionName}</h4>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
                     {selectedOrder.companionRank} - {selectedOrder.game}
                   </p>
                 </div>
@@ -270,7 +270,7 @@ export default function OrderManagement() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="rounded-lg bg-gray-50 p-3">
-                  <div className="text-xs text-gray-500">订单状态</div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400">订单状态</div>
                   <div className="mt-1">
                     <span className={`rounded-full px-2 py-1 text-xs ${statusColors[selectedOrder.status]}`}>
                       {statusLabels[selectedOrder.status]}
@@ -278,11 +278,11 @@ export default function OrderManagement() {
                   </div>
                 </div>
                 <div className="rounded-lg bg-gray-50 p-3">
-                  <div className="text-xs text-gray-500">支付状态</div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400">支付状态</div>
                   <div className="mt-1 font-medium">{paymentLabels[selectedOrder.paymentStatus] || selectedOrder.paymentStatus}</div>
                 </div>
                 <div className="rounded-lg bg-gray-50 p-3">
-                  <div className="text-xs text-gray-500">订单价格</div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400">订单价格</div>
                   <div className="mt-1 font-bold text-primary">￥{selectedOrder.price}</div>
                 </div>
                 <div className="rounded-lg bg-gray-50 p-3">
@@ -292,16 +292,16 @@ export default function OrderManagement() {
               </div>
 
               <div className="space-y-2 text-sm">
-                <div className="flex justify-between border-b border-gray-100 py-2">
-                  <span className="text-gray-500">订单编号</span>
+                <div className="flex justify-between border-b border-gray-100 dark:border-gray-700 py-2">
+                  <span className="text-gray-500 dark:text-gray-400">订单编号</span>
                   <span className="font-mono">{selectedOrder.id}</span>
                 </div>
-                <div className="flex justify-between border-b border-gray-100 py-2">
-                  <span className="text-gray-500">创建时间</span>
+                <div className="flex justify-between border-b border-gray-100 dark:border-gray-700 py-2">
+                  <span className="text-gray-500 dark:text-gray-400">创建时间</span>
                   <span>{formatDate(selectedOrder.createdAt)}</span>
                 </div>
-                <div className="flex justify-between border-b border-gray-100 py-2">
-                  <span className="text-gray-500">更新时间</span>
+                <div className="flex justify-between border-b border-gray-100 dark:border-gray-700 py-2">
+                  <span className="text-gray-500 dark:text-gray-400">更新时间</span>
                   <span>{formatDate(selectedOrder.updatedAt)}</span>
                 </div>
                 {selectedOrder.completedAt && (
@@ -319,7 +319,7 @@ export default function OrderManagement() {
                     <div className="flex gap-3">
                       <button
                         onClick={() => setCancelConfirm(null)}
-                        className="flex-1 rounded-lg border border-gray-200 bg-white py-2 text-gray-600 hover:bg-gray-50"
+                        className="flex-1 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600"
                       >
                         再想想
                       </button>

@@ -146,28 +146,28 @@ export default function AdminOrderManagement() {
       
       <div className="container mx-auto px-4 py-8 max-w-6xl">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <div className="rounded-2xl bg-white/90 p-4 text-center shadow-md">
+          <div className="rounded-2xl bg-white/90 dark:bg-gray-800/90 p-4 text-center shadow-md">
             <div className="text-2xl font-bold text-primary">{orderStats.total}</div>
-            <div className="text-sm text-gray-500 mt-1">总订单</div>
+            <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">总订单</div>
           </div>
-          <div className="rounded-2xl bg-white/90 p-4 text-center shadow-md">
+          <div className="rounded-2xl bg-white/90 dark:bg-gray-800/90 p-4 text-center shadow-md">
             <div className="text-2xl font-bold text-yellow-600">{orderStats.pending}</div>
-            <div className="text-sm text-gray-500 mt-1">待接单</div>
+            <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">待接单</div>
           </div>
-          <div className="rounded-2xl bg-white/90 p-4 text-center shadow-md">
+          <div className="rounded-2xl bg-white/90 dark:bg-gray-800/90 p-4 text-center shadow-md">
             <div className="text-2xl font-bold text-purple-600">{orderStats.in_progress}</div>
-            <div className="text-sm text-gray-500 mt-1">进行中</div>
+            <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">进行中</div>
           </div>
-          <div className="rounded-2xl bg-white/90 p-4 text-center shadow-md">
+          <div className="rounded-2xl bg-white/90 dark:bg-gray-800/90 p-4 text-center shadow-md">
             <div className="text-2xl font-bold text-green-600">{orderStats.completed}</div>
-            <div className="text-sm text-gray-500 mt-1">已完成</div>
+            <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">已完成</div>
           </div>
         </div>
 
-        <div className="rounded-2xl border border-white/90 bg-white/90 p-6 shadow-lg">
+        <div className="rounded-2xl border border-white/90 dark:border-gray-700 bg-white/90 dark:bg-gray-800/90 p-6 shadow-lg">
           <div className="mb-6 space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <h2 className="text-xl font-semibold">所有订单</h2>
+              <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100">所有订单</h2>
               <input
                 type="text"
                 value={searchKeyword}
