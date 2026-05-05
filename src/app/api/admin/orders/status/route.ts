@@ -25,6 +25,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '无效的状态' }, { status: 400 });
     }
 
+    const existing = await prisma.order.findUnique({ where: { id: orderId }, select: { id: true } });
+    if (!existing) {
+      return NextResponse.json({ error: '订单不存在' }, { status: 404 });
+    }
+
     const updatedOrder = await prisma.order.update({
       where: { id: orderId },
       data: {

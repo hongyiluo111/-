@@ -214,33 +214,37 @@ export default function Navbar() {
         {isOpen && (
           <div className="md:hidden border-t border-gray-100 dark:border-gray-800 bg-white/95 dark:bg-gray-900/95 backdrop-blur">
             <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-              <Link href="/settings" className="flex items-center gap-2 text-sm" onClick={() => setIsOpen(false)}>⚙️ 设置</Link>
-              <Link href="/" className={`block nav-link ${isActive('/') ? 'nav-link-active' : ''}`}>首页</Link>
-              <Link href="/find-companion" className={`block nav-link ${isActive('/find-companion') ? 'nav-link-active' : ''}`}>找陪玩</Link>
-              <Link href="/become-companion" className={`block nav-link ${isActive('/become-companion') ? 'nav-link-active' : ''}`}>成为陪玩</Link>
+              <Link href="/" className={`block nav-link ${isActive('/') ? 'nav-link-active' : ''}`} onClick={() => setIsOpen(false)}>首页</Link>
+              <Link href="/find-companion" className={`block nav-link ${isActive('/find-companion') ? 'nav-link-active' : ''}`} onClick={() => setIsOpen(false)}>找陪玩</Link>
+              <Link href="/become-companion" className={`block nav-link ${isActive('/become-companion') ? 'nav-link-active' : ''}`} onClick={() => setIsOpen(false)}>成为陪玩</Link>
               {user ? (
                 user.role === 'admin' ? (
                   <>
-                    <Link href="/admin/orders" className="block nav-link">订单管理</Link>
-                    <Link href="/admin/companions" className="block nav-link">陪玩管理</Link>
-                    <button onClick={handleLogout} className="block nav-link">登出</button>
+                    <Link href="/messages" className="block nav-link" onClick={() => setIsOpen(false)}>
+                      消息{unreadCount > 0 && <span className="ml-2 rounded-full bg-red-500 px-2 py-0.5 text-xs text-white">{unreadCount}</span>}
+                    </Link>
+                    <Link href="/friends" className="block nav-link" onClick={() => setIsOpen(false)}>好友</Link>
+                    <Link href="/admin/orders" className="block nav-link" onClick={() => setIsOpen(false)}>订单管理</Link>
+                    <Link href="/admin/companions" className="block nav-link" onClick={() => setIsOpen(false)}>陪玩管理</Link>
+                    <Link href="/settings" className="block nav-link" onClick={() => setIsOpen(false)}>设置</Link>
+                    <button onClick={handleLogout} className="block nav-link w-full text-left">登出</button>
                   </>
                 ) : (
                   <>
-                    <Link href="/messages" className="block nav-link relative">
-                      消息
-                      {unreadCount > 0 && <span className="ml-2 rounded-full bg-red-500 px-2 py-0.5 text-xs text-white">{unreadCount}</span>}
+                    <Link href="/messages" className="block nav-link" onClick={() => setIsOpen(false)}>
+                      消息{unreadCount > 0 && <span className="ml-2 rounded-full bg-red-500 px-2 py-0.5 text-xs text-white">{unreadCount}</span>}
                     </Link>
-                    <Link href="/friends" className="block nav-link">好友</Link>
-                    <Link href="/orders" className="block nav-link">订单管理</Link>
-                    <Link href="/profile" className="block nav-link">个人中心</Link>
-                    <button onClick={handleLogout} className="block nav-link">登出</button>
+                    <Link href="/friends" className="block nav-link" onClick={() => setIsOpen(false)}>好友</Link>
+                    <Link href="/orders" className="block nav-link" onClick={() => setIsOpen(false)}>订单管理</Link>
+                    <Link href="/profile" className="block nav-link" onClick={() => setIsOpen(false)}>个人中心</Link>
+                    <Link href="/settings" className="block nav-link" onClick={() => setIsOpen(false)}>设置</Link>
+                    <button onClick={handleLogout} className="block nav-link w-full text-left">登出</button>
                   </>
                 )
               ) : (
                 <>
-                  <Link href="/login" className="block nav-link">登录</Link>
-                  <Link href="/register" className="block nav-link">注册</Link>
+                  <Link href="/login" className="block nav-link" onClick={() => setIsOpen(false)}>登录</Link>
+                  <Link href="/register" className="block nav-link" onClick={() => setIsOpen(false)}>注册</Link>
                 </>
               )}
             </div>

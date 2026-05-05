@@ -26,7 +26,7 @@ export default function LoginPage() {
     try {
       const result = await loginUser(email, password, rememberMe);
       if (!result.success) {
-        setError((result.error as string) || '登录失败');
+        setError(String(result.error || '登录失败'));
         return;
       }
 
