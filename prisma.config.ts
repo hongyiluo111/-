@@ -3,9 +3,11 @@
 import "dotenv/config";
 import { defineConfig } from "prisma/config";
 
+const dbUrl = process.env.DATABASE_URL || "mysql://root:123456@localhost:3306/game?charset=utf8mb4";
+
 export default defineConfig({
   schema: "prisma/schema.prisma",
   datasource: {
-    url: "mysql://root:123456@localhost:3306/game",
+    url: dbUrl,
   },
 });

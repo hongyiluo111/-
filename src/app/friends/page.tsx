@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUserStore } from '@/store/user';
 import ChatModal from '@/components/ChatModal';
@@ -30,12 +30,7 @@ export default function FriendsPage() {
   const [addSuccess, setAddSuccess] = useState('');
   const [activeChat, setActiveChat] = useState<{ userId: string; userName: string } | null>(null);
 
-  useEffect(() => {
-    if (!user) { router.push('/login'); return; }
-    loadData();
-  }, [user, router]);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       const res = await fetch('/api/friends', { credentials: 'include' });
       if (res.ok) {
@@ -45,7 +40,12 @@ export default function FriendsPage() {
       }
     } catch { /* ignore */ }
     setLoading(false);
-  };
+  }, []);
+
+  useEffect(() => {
+    if (!user) { router.push('/login'); return; }
+    loadData();
+  }, [user, router, loadData]);
 
   const handleSearch = async () => {
     if (!searchEmail.trim()) return;
