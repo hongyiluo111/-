@@ -95,13 +95,9 @@ export default function ProfilePage() {
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || '创建支付失败');
       if (result.paymentUrl) window.open(result.paymentUrl, '_blank', 'noopener,noreferrer');
-      const diamondsToAdd = currentRechargeAmount * DIAMOND_RATE;
-      setDiamonds((current) => current + diamondsToAdd);
-      setStatusMessage(`已发起 ${currentRechargeAmount} 元充值，到账 ${diamondsToAdd} 钻石`);
-    } catch {
-      const diamondsToAdd = currentRechargeAmount * DIAMOND_RATE;
-      setDiamonds((current) => current + diamondsToAdd);
-      setStatusMessage(`支付网关不可用，已切换演示支付并增加 ${diamondsToAdd} 钻石`);
+      setStatusMessage(`已发起 ${currentRechargeAmount} 元充值，请在支付页面完成付款`);
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : '创建支付失败');
     }
   };
 

@@ -24,30 +24,30 @@ export default function ChatModal({ receiverId, receiverName, onClose }: ChatMod
   const [loading, setLoading] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const pollingRef = useRef<NodeJS.Timeout | null>(null);
+  const mountedRef = useRef(true);
 
   const loadHistory = useCallback(async () => {
     try {
       const response = await fetch(`/api/chat/messages?receiverId=${receiverId}`, {
         credentials: 'include',
       });
-      if (response.ok) {
+      if (response.ok && mountedRef.current) {
         const data = await response.json();
         setChatHistory(data.messages || []);
       }
-    } catch (loadError) {
-      console.error('加载聊天记录失败:', loadError);
-    }
+    } catch { /* ignore */ }
   }, [receiverId]);
 
   useEffect(() => {
+    mountedRef.current = true;
     loadHistory();
-
-    // 每 3 秒轮询新消息
     pollingRef.current = setInterval(loadHistory, 3000);
 
     return () => {
+      mountedRef.current = false;
       if (pollingRef.current) {
         clearInterval(pollingRef.current);
+        pollingRef.current = null;
       }
     };
   }, [loadHistory]);

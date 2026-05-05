@@ -6,6 +6,7 @@ import { revalidatePath } from 'next/cache';
 import { generateToken, setAuthCookie, getAuthCookie, verifyToken, clearAuthCookie } from '@/lib/jwt';
 
 export async function registerUser(name: string, email: string, password: string) {
+  const rememberMe = false;
   try {
     // 检查邮箱是否已存在
     const existingUser = await prisma.user.findUnique({
@@ -39,8 +40,8 @@ export async function registerUser(name: string, email: string, password: string
     });
 
     // 生成token并设置cookie
-    const token = generateToken(user.id, user.email, user.role);
-    await setAuthCookie(token);
+    const token = generateToken(user.id, user.email, user.role, rememberMe);
+    await setAuthCookie(token, rememberMe);
 
     revalidatePath('/login');
     revalidatePath('/register');
@@ -50,7 +51,7 @@ export async function registerUser(name: string, email: string, password: string
   }
 }
 
-export async function loginUser(email: string, password: string) {
+export async function loginUser(email: string, password: string, rememberMe: boolean = false) {
   try {
     // 查找用户
     const user = await prisma.user.findUnique({
@@ -81,8 +82,8 @@ export async function loginUser(email: string, password: string) {
     }
 
     // 生成token并设置cookie
-    const token = generateToken(user.id, user.email, user.role);
-    await setAuthCookie(token);
+    const token = generateToken(user.id, user.email, user.role, rememberMe);
+    await setAuthCookie(token, rememberMe);
 
     const { password: passwordHash, ...userWithoutPassword } = user;
     void passwordHash;

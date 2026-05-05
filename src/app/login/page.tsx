@@ -15,6 +15,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,7 +23,7 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      const result = await loginUser(email, password);
+      const result = await loginUser(email, password, rememberMe);
       if (!result.success) {
         setError((result.error as string) || '登录失败');
         return;
@@ -92,7 +93,7 @@ export default function LoginPage() {
 
                 <div className="flex items-center justify-between">
                   <label className="inline-flex items-center gap-2 text-sm text-gray-700">
-                    <input type="checkbox" className="h-4 w-4 rounded border-gray-300 text-blue-600" />
+                    <input type="checkbox" checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)} className="h-4 w-4 rounded border-gray-300 text-blue-600" />
                     记住我
                   </label>
                   <Link href="/forgot-password" className="text-sm text-blue-600 hover:text-blue-500">

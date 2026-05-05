@@ -39,16 +39,18 @@ export default function Navbar() {
 
   // 心跳
   useEffect(() => {
+    if (!user) return;
     const send = async () => {
       try { await fetch('/api/user/online', { method: 'POST', credentials: 'include' }); } catch { /* ignore */ }
     };
     send();
     const i = setInterval(send, 60000);
     return () => clearInterval(i);
-  }, []);
+  }, [user]);
 
   // 未读消息轮询 + toast 通知
   useEffect(() => {
+    if (!user) return;
     let lastTimestamp = Date.now().toString();
 
     const checkUnread = async () => {
@@ -83,7 +85,7 @@ export default function Navbar() {
     checkUnread();
     const i = setInterval(checkUnread, 5000);
     return () => clearInterval(i);
-  }, [pathname]);
+  }, [user, pathname]);
 
   // 滚动监听
   useEffect(() => {

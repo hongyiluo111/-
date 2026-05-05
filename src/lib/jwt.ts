@@ -16,11 +16,11 @@ function getSecret(): string {
   return secret;
 }
 
-export function generateToken(userId: string, email: string, role: string) {
+export function generateToken(userId: string, email: string, role: string, rememberMe: boolean = false) {
   return jwt.sign(
     { userId, email, role },
     getSecret(),
-    { expiresIn: '7d' }
+    { expiresIn: rememberMe ? '30d' : '7d' }
   );
 }
 
@@ -32,12 +32,13 @@ export function verifyToken(token: string) {
   }
 }
 
-export async function setAuthCookie(token: string) {
+export async function setAuthCookie(token: string, rememberMe: boolean = false) {
   const cookieStore = await cookies();
+  const maxAge = rememberMe ? 30 * 24 * 60 * 60 : 7 * 24 * 60 * 60;
   cookieStore.set('token', token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    maxAge: 7 * 24 * 60 * 60,
+    maxAge,
     path: '/',
   });
 }
