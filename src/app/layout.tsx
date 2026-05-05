@@ -4,6 +4,7 @@ import './globals.css';
 import Navbar from '@/components/Navbar';
 import QueryProvider from '@/components/QueryProvider';
 import AIService from '@/components/AIService';
+import ThemeProvider from '@/components/ThemeProvider';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -20,11 +21,13 @@ export default function RootLayout({
   return (
     <html lang="zh-CN">
       <body className={inter.className}>
-        <QueryProvider>
-          <Navbar />
-          <div className="pt-16 page-enter">{children}</div>
-          <AIService />
-        </QueryProvider>
+        <ThemeProvider>
+          <QueryProvider>
+            <Navbar />
+            <div className="pt-16 page-enter">{children}</div>
+            <AIService />
+          </QueryProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
