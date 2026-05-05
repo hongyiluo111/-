@@ -29,6 +29,8 @@ model User {
   notifications Notification[]
   sentMessages     ChatMessage[] @relation("SentMessages")
   receivedMessages ChatMessage[] @relation("ReceivedMessages")
+  friends     Friend[] @relation("UserFriends")
+  friendedBy  Friend[] @relation("FriendedBy")
 }
 
 // 陪玩模型
@@ -100,4 +102,20 @@ model ChatMessage {
 
   @@index([senderId, receiverId])
   @@index([receiverId])
+}
+
+// 好友模型
+model Friend {
+  id        String   @id @default(cuid())
+  userId    String
+  friendId  String
+  status    String   @default("pending")
+  createdAt DateTime @default(now())
+
+  // 关联
+  user      User @relation("UserFriends", fields: [userId], references: [id], onDelete: Cascade)
+  friend    User @relation("FriendedBy", fields: [friendId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, friendId])
+  @@index([friendId])
 }

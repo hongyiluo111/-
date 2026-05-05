@@ -14,8 +14,11 @@ export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const [scrollProgress, setScrollProgress] = useState(0);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [toast, setToast] = useState<{ sender: string; content: string } | null>(null);
   const lastScrollY = useRef(0);
   const scrollTimeout = useRef<NodeJS.Timeout | null>(null);
+  const toastTimeout = useRef<NodeJS.Timeout | null>(null);
 
   const isActive = (path: string) => {
     if (path === '/') return pathname === '/';
@@ -28,251 +31,206 @@ export default function Navbar() {
         const response = await fetch('/api/auth/current-user');
         if (response.ok) {
           const userData = await response.json();
-          if (userData) {
-            setUser(userData);
-          }
+          if (userData) setUser(userData);
         }
-      } catch (error) {
-        console.error('获取用户信息失败:', error);
-      }
+      } catch { /* ignore */ }
     };
     loadUser();
   }, [setUser]);
 
-  // 心跳：更新在线状态
+  // 心跳
   useEffect(() => {
-    const sendHeartbeat = async () => {
-      try {
-        await fetch('/api/user/online', {
-          method: 'POST',
-          credentials: 'include',
-        });
-      } catch {
-        // 忽略心跳错误
-      }
+    const send = async () => {
+      try { await fetch('/api/user/online', { method: 'POST', credentials: 'include' }); } catch { /* ignore */ }
     };
-
-    sendHeartbeat();
-    const interval = setInterval(sendHeartbeat, 60000);
-    return () => clearInterval(interval);
+    send();
+    const i = setInterval(send, 60000);
+    return () => clearInterval(i);
   }, []);
 
+  // 未读消息轮询 + toast 通知
+  useEffect(() => {
+    let lastTimestamp = Date.now().toString();
+
+    const checkUnread = async () => {
+      try {
+        const res = await fetch(`/api/chat/unread?after=${lastTimestamp}`, { credentials: 'include' });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.count > 0) {
+            // 获取最新未读消息内容
+            const convRes = await fetch('/api/chat/conversations', { credentials: 'include' });
+            if (convRes.ok) {
+              const convData = await convRes.json();
+              const unread = convData.conversations?.reduce((sum: number, c: { unread: number }) => sum + c.unread, 0) || 0;
+              setUnreadCount(unread);
+
+              // Toast 通知（不在消息页面时）
+              if (pathname !== '/messages' && data.count > 0) {
+                const lastConv = convData.conversations?.[0];
+                if (lastConv && lastConv.lastMessage) {
+                  setToast({ sender: lastConv.userName, content: lastConv.lastMessage.slice(0, 30) });
+                  if (toastTimeout.current) clearTimeout(toastTimeout.current);
+                  toastTimeout.current = setTimeout(() => setToast(null), 4000);
+                }
+              }
+            }
+          }
+        }
+        lastTimestamp = Date.now().toString();
+      } catch { /* ignore */ }
+    };
+
+    checkUnread();
+    const i = setInterval(checkUnread, 5000);
+    return () => clearInterval(i);
+  }, [pathname]);
+
+  // 滚动监听
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
       const docHeight = document.documentElement.scrollHeight - window.innerHeight;
       const progress = docHeight > 0 ? Math.min(100, (currentScrollY / docHeight) * 100) : 0;
       setScrollProgress(progress);
-      
-      // 滑动时隐藏导航栏
       if (currentScrollY > lastScrollY.current && currentScrollY > 100) {
         setIsVisible(false);
       } else {
         setIsVisible(true);
       }
-      
       lastScrollY.current = currentScrollY;
-      
-      // 清除之前的定时器
-      if (scrollTimeout.current) {
-        clearTimeout(scrollTimeout.current);
-      }
-      
-      // 停止滑动后显示导航栏
-      scrollTimeout.current = setTimeout(() => {
-        setIsVisible(true);
-      }, 1000);
+      if (scrollTimeout.current) clearTimeout(scrollTimeout.current);
+      scrollTimeout.current = setTimeout(() => setIsVisible(true), 1000);
     };
-    
     window.addEventListener('scroll', handleScroll, { passive: true });
-    
     return () => {
       window.removeEventListener('scroll', handleScroll);
-      if (scrollTimeout.current) {
-        clearTimeout(scrollTimeout.current);
-      }
+      if (scrollTimeout.current) clearTimeout(scrollTimeout.current);
     };
   }, []);
 
   const handleLogout = async () => {
     try {
       const result = await logoutUser();
-      if (result.success) {
-        logout();
-        router.push('/login');
-      }
-    } catch (error: unknown) {
-      console.error('登出失败:', error instanceof Error ? error.message : '未知错误');
-    }
+      if (result.success) { logout(); router.push('/login'); }
+    } catch { /* ignore */ }
   };
 
   return (
-    <nav className={`fixed top-0 left-0 right-0 z-50 border-b border-white/60 dark:border-gray-800/60 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl shadow-sm transition-transform duration-300 ${isVisible ? 'translate-y-0' : '-translate-y-full'}`}>
-      <div className="absolute left-0 top-0 h-[2px] bg-gradient-to-r from-primary to-secondary transition-all duration-150" style={{ width: `${scrollProgress}%` }} />
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
-          <div className="flex items-center">
-            <Link href="/" className="flex-shrink-0 flex items-center">
-              <span className="mr-2 h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse-soft" />
-              <span className="text-2xl font-extrabold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">鸿一电竞</span>
-            </Link>
-            <div className="hidden md:block ml-10">
-              <div className="flex space-x-4">
-                <Link href="/" className={`nav-link ${isActive('/') ? 'nav-link-active' : ''}`}>
-                  首页
-                </Link>
-                <Link href="/find-companion" className={`nav-link ${isActive('/find-companion') ? 'nav-link-active' : ''}`}>
-                  找陪玩
-                </Link>
-                <Link href="/become-companion" className={`nav-link ${isActive('/become-companion') ? 'nav-link-active' : ''}`}>
-                  成为陪玩
-                </Link>
+    <>
+      <nav className={`fixed top-0 left-0 right-0 z-50 border-b border-white/60 dark:border-gray-800/60 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl shadow-sm transition-transform duration-300 ${isVisible ? 'translate-y-0' : '-translate-y-full'}`}>
+        <div className="absolute left-0 top-0 h-[2px] bg-gradient-to-r from-primary to-secondary transition-all duration-150" style={{ width: `${scrollProgress}%` }} />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between h-16">
+            <div className="flex items-center">
+              <Link href="/" className="flex-shrink-0 flex items-center">
+                <span className="mr-2 h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse-soft" />
+                <span className="text-2xl font-extrabold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">鸿一电竞</span>
+              </Link>
+              <div className="hidden md:block ml-10">
+                <div className="flex space-x-4">
+                  <Link href="/" className={`nav-link ${isActive('/') ? 'nav-link-active' : ''}`}>首页</Link>
+                  <Link href="/find-companion" className={`nav-link ${isActive('/find-companion') ? 'nav-link-active' : ''}`}>找陪玩</Link>
+                  <Link href="/become-companion" className={`nav-link ${isActive('/become-companion') ? 'nav-link-active' : ''}`}>成为陪玩</Link>
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center">
+              <div className="hidden md:flex items-center space-x-4">
+                <ThemeToggle />
+                {user ? (
+                  user.role === 'admin' ? (
+                    <>
+                      <Link href="/admin/orders" className={`nav-link ${isActive('/admin/orders') ? 'nav-link-active' : ''}`}>订单管理</Link>
+                      <Link href="/admin/companions" className={`nav-link ${isActive('/admin/companions') ? 'nav-link-active' : ''}`}>陪玩管理</Link>
+                      <button onClick={handleLogout} className="nav-link">登出</button>
+                    </>
+                  ) : (
+                    <>
+                      {/* 消息按钮 */}
+                      <Link href="/messages" className="nav-link relative">
+                        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                        </svg>
+                        {unreadCount > 0 && (
+                          <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs text-white font-bold">
+                            {unreadCount > 9 ? '9+' : unreadCount}
+                          </span>
+                        )}
+                      </Link>
+                      <Link href="/friends" className={`nav-link ${isActive('/friends') ? 'nav-link-active' : ''}`}>好友</Link>
+                      <Link href="/orders" className={`nav-link ${isActive('/orders') ? 'nav-link-active' : ''}`}>订单管理</Link>
+                      <Link href="/profile" className={`nav-link ${isActive('/profile') ? 'nav-link-active' : ''}`}>个人中心</Link>
+                      <button onClick={handleLogout} className="nav-link">登出</button>
+                    </>
+                  )
+                ) : (
+                  <>
+                    <Link href="/login" className="nav-link">登录</Link>
+                    <Link href="/register" className="nav-link">注册</Link>
+                  </>
+                )}
+              </div>
+              <div className="flex items-center md:hidden">
+                <button onClick={() => setIsOpen(!isOpen)} className="inline-flex items-center justify-center p-2 rounded-xl text-gray-700 dark:text-gray-300 hover:text-primary hover:bg-primary/10 focus:outline-none">
+                  <svg className="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    {isOpen ? (
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    ) : (
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                    )}
+                  </svg>
+                </button>
               </div>
             </div>
           </div>
-          <div className="flex items-center">
-            <div className="hidden md:flex items-center space-x-4">
-              <ThemeToggle />
+        </div>
+
+        {/* 移动端菜单 */}
+        {isOpen && (
+          <div className="md:hidden border-t border-gray-100 dark:border-gray-800 bg-white/95 dark:bg-gray-900/95 backdrop-blur">
+            <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+              <div className="px-3 py-2"><ThemeToggle /></div>
+              <Link href="/" className={`block nav-link ${isActive('/') ? 'nav-link-active' : ''}`}>首页</Link>
+              <Link href="/find-companion" className={`block nav-link ${isActive('/find-companion') ? 'nav-link-active' : ''}`}>找陪玩</Link>
+              <Link href="/become-companion" className={`block nav-link ${isActive('/become-companion') ? 'nav-link-active' : ''}`}>成为陪玩</Link>
               {user ? (
                 user.role === 'admin' ? (
                   <>
-                    <Link href="/admin/orders" className={`nav-link ${isActive('/admin/orders') ? 'nav-link-active' : ''}`}>
-                      订单管理
-                    </Link>
-                    <Link href="/admin/companions" className={`nav-link ${isActive('/admin/companions') ? 'nav-link-active' : ''}`}>
-                      陪玩管理
-                    </Link>
-                    <button
-                      onClick={handleLogout}
-                      className="nav-link"
-                    >
-                      登出
-                    </button>
+                    <Link href="/admin/orders" className="block nav-link">订单管理</Link>
+                    <Link href="/admin/companions" className="block nav-link">陪玩管理</Link>
+                    <button onClick={handleLogout} className="block nav-link">登出</button>
                   </>
                 ) : (
                   <>
-                    <Link href="/orders" className={`nav-link ${isActive('/orders') ? 'nav-link-active' : ''}`}>
-                      订单管理
+                    <Link href="/messages" className="block nav-link relative">
+                      消息
+                      {unreadCount > 0 && <span className="ml-2 rounded-full bg-red-500 px-2 py-0.5 text-xs text-white">{unreadCount}</span>}
                     </Link>
-                    <Link href="/profile" className={`nav-link ${isActive('/profile') ? 'nav-link-active' : ''}`}>
-                      个人中心
-                    </Link>
-                    <button
-                      onClick={handleLogout}
-                      className="nav-link"
-                    >
-                      登出
-                    </button>
+                    <Link href="/friends" className="block nav-link">好友</Link>
+                    <Link href="/orders" className="block nav-link">订单管理</Link>
+                    <Link href="/profile" className="block nav-link">个人中心</Link>
+                    <button onClick={handleLogout} className="block nav-link">登出</button>
                   </>
                 )
               ) : (
                 <>
-                  <Link href="/login" className="nav-link">
-                    登录
-                  </Link>
-                  <Link href="/register" className="nav-link">
-                    注册
-                  </Link>
+                  <Link href="/login" className="block nav-link">登录</Link>
+                  <Link href="/register" className="block nav-link">注册</Link>
                 </>
               )}
             </div>
-            <div className="flex items-center md:hidden">
-              <button
-                onClick={() => setIsOpen(!isOpen)}
-                className="inline-flex items-center justify-center p-2 rounded-xl text-gray-700 dark:text-gray-300 hover:text-primary hover:bg-primary/10 focus:outline-none"
-              >
-                <svg
-                  className="h-6 w-6"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  {isOpen ? (
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  ) : (
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M4 6h16M4 12h16M4 18h16"
-                    />
-                  )}
-                </svg>
-              </button>
-            </div>
           </div>
-        </div>
-      </div>
+        )}
+      </nav>
 
-      {/* 移动端菜单 */}
-      {isOpen && (
-        <div className="md:hidden border-t border-gray-100 dark:border-gray-800 bg-white/95 dark:bg-gray-900/95 backdrop-blur">
-          <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-            <div className="px-3 py-2">
-              <ThemeToggle />
-            </div>
-            <Link href="/" className={`block nav-link ${isActive('/') ? 'nav-link-active' : ''}`}>
-              首页
-            </Link>
-            <Link href="/find-companion" className={`block nav-link ${isActive('/find-companion') ? 'nav-link-active' : ''}`}>
-              找陪玩
-            </Link>
-            <Link href="/become-companion" className={`block nav-link ${isActive('/become-companion') ? 'nav-link-active' : ''}`}>
-              成为陪玩
-            </Link>
-            {user ? (
-              user.role === 'admin' ? (
-                <>
-                  <Link href="/admin/orders" className={`block nav-link ${isActive('/admin/orders') ? 'nav-link-active' : ''}`}>
-                    订单管理
-                  </Link>
-                  <Link href="/admin/companions" className={`block nav-link ${isActive('/admin/companions') ? 'nav-link-active' : ''}`}>
-                    陪玩管理
-                  </Link>
-                  <button
-                    onClick={handleLogout}
-                    className="block nav-link"
-                  >
-                    登出
-                  </button>
-                </>
-              ) : (
-                <>
-                  <Link href="/orders" className={`block nav-link ${isActive('/orders') ? 'nav-link-active' : ''}`}>
-                    订单管理
-                  </Link>
-                  <Link href="/profile" className={`block nav-link ${isActive('/profile') ? 'nav-link-active' : ''}`}>
-                    个人中心
-                  </Link>
-                  <button
-                    onClick={handleLogout}
-                    className="block nav-link"
-                  >
-                    登出
-                  </button>
-                </>
-              )
-            ) : (
-              <>
-                <Link href="/login" className="block nav-link">
-                  登录
-                </Link>
-                <Link href="/register" className="block nav-link">
-                  注册
-                </Link>
-              </>
-            )}
-          </div>
+      {/* Toast 通知 */}
+      {toast && (
+        <div className="fixed top-20 right-4 z-[60] animate-fade-in rounded-xl bg-white dark:bg-gray-800 shadow-xl border border-gray-200 dark:border-gray-700 p-4 max-w-xs">
+          <p className="text-sm font-semibold text-gray-800 dark:text-gray-100">{toast.sender} 发来消息</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 truncate">{toast.content}</p>
         </div>
       )}
-
-
-    </nav>
+    </>
   );
 }
