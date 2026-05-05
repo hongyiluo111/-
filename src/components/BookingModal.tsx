@@ -73,7 +73,7 @@ export default function BookingModal({ companion, onClose }: BookingModalProps) 
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
-      <div className="w-full max-w-md overflow-hidden rounded-2xl bg-white">
+      <div className="w-full max-w-md overflow-hidden rounded-2xl bg-white dark:bg-gray-800">
         <div className="bg-gradient-to-r from-primary to-accent p-6 text-white">
           <div className="flex items-center justify-between">
             <h3 className="text-xl font-bold">预约陪玩</h3>
@@ -84,7 +84,7 @@ export default function BookingModal({ companion, onClose }: BookingModalProps) 
         </div>
 
         <div className="space-y-6 p-6">
-          <div className="flex items-center gap-4 rounded-xl bg-gray-50 p-4">
+          <div className="flex items-center gap-4 rounded-xl bg-gray-50 dark:bg-gray-700 p-4">
             <div className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-full bg-gray-200">
               <Image
                 src={companion.avatar}
@@ -96,15 +96,15 @@ export default function BookingModal({ companion, onClose }: BookingModalProps) 
               />
             </div>
             <div>
-              <h4 className="text-lg font-semibold">{companion.name}</h4>
-              <p className="text-sm text-gray-500">
+              <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-100">{companion.name}</h4>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
                 {companion.game} · {companion.rank}
               </p>
             </div>
           </div>
 
           <div>
-            <label className="mb-3 block font-medium text-gray-700">选择时长</label>
+            <label className="mb-3 block font-medium text-gray-700 dark:text-gray-300">选择时长</label>
             <div className="grid grid-cols-3 gap-2">
               {durationOptions.map((option) => (
                 <button
@@ -113,7 +113,7 @@ export default function BookingModal({ companion, onClose }: BookingModalProps) 
                   className={`rounded-lg px-3 py-2 text-sm font-medium transition-all ${
                     duration === option.value
                       ? 'bg-primary text-white shadow-md'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                   }`}
                 >
                   {option.label}
@@ -124,11 +124,11 @@ export default function BookingModal({ companion, onClose }: BookingModalProps) 
 
           <div className="rounded-xl bg-blue-50 p-4">
             <div className="flex items-center justify-between">
-              <span className="text-gray-600">单价</span>
+              <span className="text-gray-600 dark:text-gray-400">单价</span>
               <span className="font-medium">￥{companion.price}/小时</span>
             </div>
             <div className="mt-2 flex items-center justify-between border-t border-blue-100 pt-2">
-              <span className="text-gray-600">总计</span>
+              <span className="text-gray-600 dark:text-gray-400">总计</span>
               <span className="text-xl font-bold text-primary">￥{totalPrice}</span>
             </div>
           </div>

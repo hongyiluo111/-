@@ -113,8 +113,8 @@ export default function FriendsPage() {
 
       <div className="container mx-auto max-w-2xl px-4 py-8 space-y-6">
         {/* 添加好友 */}
-        <div className="rounded-2xl border border-white/90 bg-white/90 p-6 shadow-lg">
-          <h2 className="text-xl font-semibold mb-4">添加好友</h2>
+        <div className="rounded-2xl border border-white/90 dark:border-gray-700 bg-white/90 dark:bg-gray-800/90 p-6 shadow-lg">
+          <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-4">添加好友</h2>
           <div className="flex gap-2">
             <input
               type="text"
@@ -130,12 +130,12 @@ export default function FriendsPage() {
           {addError && <p className="mt-2 text-sm text-red-500">{addError}</p>}
           {addSuccess && <p className="mt-2 text-sm text-green-500">{addSuccess}</p>}
           {searchResult && (
-            <div className="mt-4 flex items-center justify-between rounded-xl bg-gray-50 p-4">
+            <div className="mt-4 flex items-center justify-between rounded-xl bg-gray-50 dark:bg-gray-700 p-4">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
                   {searchResult.name.charAt(0)}
                 </div>
-                <span className="font-medium">{searchResult.name}</span>
+                <span className="font-medium text-gray-800 dark:text-gray-100">{searchResult.name}</span>
               </div>
               <button onClick={handleAddFriend} className="btn btn-primary text-sm">添加好友</button>
             </div>
@@ -144,16 +144,16 @@ export default function FriendsPage() {
 
         {/* 好友请求 */}
         {requests.length > 0 && (
-          <div className="rounded-2xl border border-white/90 bg-white/90 p-6 shadow-lg">
-            <h2 className="text-xl font-semibold mb-4">好友请求</h2>
-            <div className="divide-y divide-gray-100">
+          <div className="rounded-2xl border border-white/90 dark:border-gray-700 bg-white/90 dark:bg-gray-800/90 p-6 shadow-lg">
+            <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-4">好友请求</h2>
+            <div className="divide-y divide-gray-100 dark:divide-gray-700">
               {requests.map((req) => (
                 <div key={req.id} className="flex items-center justify-between py-3">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
                       {req.name.charAt(0)}
                     </div>
-                    <span className="font-medium">{req.name}</span>
+                    <span className="font-medium text-gray-800 dark:text-gray-100">{req.name}</span>
                   </div>
                   <button onClick={() => handleAccept(req.id)} className="btn btn-primary text-sm">接受</button>
                 </div>
@@ -163,28 +163,28 @@ export default function FriendsPage() {
         )}
 
         {/* 好友列表 */}
-        <div className="rounded-2xl border border-white/90 bg-white/90 p-6 shadow-lg">
-          <h2 className="text-xl font-semibold mb-4">我的好友 ({friends.length})</h2>
+        <div className="rounded-2xl border border-white/90 dark:border-gray-700 bg-white/90 dark:bg-gray-800/90 p-6 shadow-lg">
+          <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-4">我的好友 ({friends.length})</h2>
           {loading ? (
             <div className="flex justify-center py-8">
               <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-primary"></div>
             </div>
           ) : friends.length === 0 ? (
-            <p className="text-center text-gray-400 py-8">暂无好友，快去添加吧！</p>
+            <p className="text-center text-gray-400 dark:text-gray-500 py-8">暂无好友，快去添加吧！</p>
           ) : (
             <div className="grid grid-cols-2 gap-3">
               {friends.map((f) => (
                 <div
                   key={f.id}
                   onClick={() => setActiveChat({ userId: f.userId, userName: f.name })}
-                  className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 hover:bg-gray-100 cursor-pointer transition-colors"
+                  className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer transition-colors"
                 >
                   <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
                     {f.name.charAt(0)}
                   </div>
                   <div>
-                    <div className="font-medium text-sm">{f.name}</div>
-                    <div className="text-xs text-gray-400">点击聊天</div>
+                    <div className="font-medium text-sm text-gray-800 dark:text-gray-100">{f.name}</div>
+                    <div className="text-xs text-gray-400 dark:text-gray-500">点击聊天</div>
                   </div>
                 </div>
               ))}

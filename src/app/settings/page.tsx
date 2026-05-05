@@ -98,27 +98,27 @@ export default function SettingsPage() {
         )}
 
         {/* 修改密码 */}
-        <div className="rounded-2xl border border-white/90 bg-white/90 p-6 shadow-lg">
+        <div className="rounded-2xl border border-white/90 dark:border-gray-700 bg-white/90 dark:bg-gray-800/90 p-6 shadow-lg">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-xl font-semibold">修改密码</h2>
-              <p className="text-sm text-gray-400 mt-1">保护你的账号安全</p>
+              <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100">修改密码</h2>
+              <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">保护你的账号安全</p>
             </div>
             <button onClick={() => setShowPasswordModal(true)} className="btn btn-secondary">修改密码</button>
           </div>
         </div>
 
         {/* 主题 */}
-        <div className="rounded-2xl border border-white/90 bg-white/90 p-6 shadow-lg">
-          <h2 className="text-xl font-semibold mb-4">主题设置</h2>
+        <div className="rounded-2xl border border-white/90 dark:border-gray-700 bg-white/90 dark:bg-gray-800/90 p-6 shadow-lg">
+          <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-100">主题设置</h2>
           <ThemeToggle />
         </div>
 
         {/* 消息通知 */}
-        <div className="rounded-2xl border border-white/90 bg-white/90 p-6 shadow-lg">
+        <div className="rounded-2xl border border-white/90 dark:border-gray-700 bg-white/90 dark:bg-gray-800/90 p-6 shadow-lg">
           <h2 className="text-xl font-semibold mb-4">消息通知</h2>
           <div className="flex items-center justify-between py-2">
-            <span className="text-gray-700">接收新消息弹窗通知</span>
+            <span className="text-gray-700 dark:text-gray-300">接收新消息弹窗通知</span>
             <button
               onClick={handleNotifyToggle}
               className={`relative inline-flex h-6 w-11 rounded-full transition-colors ${notifyEnabled ? 'bg-primary' : 'bg-gray-300'}`}
@@ -129,17 +129,17 @@ export default function SettingsPage() {
         </div>
 
         {/* 隐私设置 */}
-        <div className="rounded-2xl border border-white/90 bg-white/90 p-6 shadow-lg">
+        <div className="rounded-2xl border border-white/90 dark:border-gray-700 bg-white/90 dark:bg-gray-800/90 p-6 shadow-lg">
           <h2 className="text-xl font-semibold mb-4">隐私设置</h2>
           <div className="space-y-4">
             <div className="flex items-center justify-between py-2">
-              <span className="text-gray-700">允许陌生人发消息</span>
+              <span className="text-gray-700 dark:text-gray-300">允许陌生人发消息</span>
               <button onClick={() => handlePrivacyToggle('allowStrangerMsg', allowStrangerMsg)} className={`relative inline-flex h-6 w-11 rounded-full transition-colors ${allowStrangerMsg ? 'bg-primary' : 'bg-gray-300'}`}>
                 <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform mt-0.5 ${allowStrangerMsg ? 'translate-x-5 ml-0.5' : 'translate-x-0.5'}`} />
               </button>
             </div>
             <div className="flex items-center justify-between py-2">
-              <span className="text-gray-700">显示在线状态</span>
+              <span className="text-gray-700 dark:text-gray-300">显示在线状态</span>
               <button onClick={() => handlePrivacyToggle('showOnlineStatus', showOnlineStatus)} className={`relative inline-flex h-6 w-11 rounded-full transition-colors ${showOnlineStatus ? 'bg-primary' : 'bg-gray-300'}`}>
                 <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform mt-0.5 ${showOnlineStatus ? 'translate-x-5 ml-0.5' : 'translate-x-0.5'}`} />
               </button>
@@ -148,9 +148,9 @@ export default function SettingsPage() {
         </div>
 
         {/* 账号管理 */}
-        <div className="rounded-2xl border border-white/90 bg-white/90 p-6 shadow-lg">
-          <h2 className="text-xl font-semibold mb-4 text-red-600">账号管理</h2>
-          <p className="text-sm text-gray-500 mb-4">注销账号后所有数据将被永久删除，无法恢复。</p>
+        <div className="rounded-2xl border border-white/90 dark:border-gray-700 bg-white/90 dark:bg-gray-800/90 p-6 shadow-lg">
+          <h2 className="text-xl font-semibold mb-4 text-red-600 dark:text-red-400">账号管理</h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">注销账号后所有数据将被永久删除，无法恢复。</p>
           {showDeleteConfirm ? (
             <div className="space-y-3">
               <p className="text-red-600 font-medium">确定要注销账号吗？此操作不可撤销！</p>
@@ -168,7 +168,7 @@ export default function SettingsPage() {
       {/* 修改密码弹窗 */}
       {showPasswordModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setShowPasswordModal(false)}>
-          <div className="w-full max-w-md rounded-3xl bg-white p-8 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+          <div className="w-full max-w-md rounded-3xl bg-white dark:bg-gray-800 p-8 shadow-2xl" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-semibold">修改密码</h2>
               <button onClick={() => setShowPasswordModal(false)} className="text-2xl text-gray-400 hover:text-gray-600">×</button>

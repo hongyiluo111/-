@@ -84,7 +84,7 @@ export default function ChatModal({ receiverId, receiverName, onClose }: ChatMod
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="flex h-[500px] w-96 flex-col rounded-lg bg-white">
+      <div className="flex h-[500px] w-96 flex-col rounded-lg bg-white dark:bg-gray-800">
         <div className="flex items-center justify-between rounded-t-lg bg-blue-600 p-4 text-white">
           <h3 className="font-semibold">与 {receiverName} 聊天</h3>
           <button onClick={onClose} className="text-2xl text-white hover:text-gray-200">
@@ -94,12 +94,12 @@ export default function ChatModal({ receiverId, receiverName, onClose }: ChatMod
 
         <div className="flex-grow space-y-4 overflow-y-auto p-4">
           {chatHistory.length === 0 && (
-            <p className="text-center text-sm text-gray-500">开始和 {receiverName} 聊天吧！</p>
+            <p className="text-center text-sm text-gray-500 dark:text-gray-400">开始和 {receiverName} 聊天吧！</p>
           )}
 
           {chatHistory.map((msg) => (
             <div key={msg.id} className={`flex ${msg.senderId === user?.id ? 'justify-end' : 'justify-start'}`}>
-              <div className={`max-w-[80%] rounded-lg p-3 ${msg.senderId === user?.id ? 'bg-blue-100' : 'bg-gray-100'}`}>
+              <div className={`max-w-[80%] rounded-lg p-3 ${msg.senderId === user?.id ? 'bg-blue-100 dark:bg-blue-900/50 text-gray-800 dark:text-gray-100' : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-100'}`}>
                 <p>{msg.content}</p>
               </div>
             </div>
@@ -108,7 +108,7 @@ export default function ChatModal({ receiverId, receiverName, onClose }: ChatMod
           <div ref={chatEndRef} />
         </div>
 
-        <div className="border-t p-4">
+        <div className="border-t dark:border-gray-700 p-4">
           <div className="flex space-x-2">
             <input
               type="text"
@@ -118,7 +118,7 @@ export default function ChatModal({ receiverId, receiverName, onClose }: ChatMod
                 if (e.key === 'Enter') void handleSend();
               }}
               placeholder={`给 ${receiverName} 发消息...`}
-              className="flex-grow rounded-lg border p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="flex-grow rounded-lg border dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
             <button
               onClick={handleSend}

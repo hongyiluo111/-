@@ -61,27 +61,27 @@ export default function MessagesPage() {
       </div>
 
       <div className="container mx-auto max-w-2xl px-4 py-8">
-        <div className="rounded-2xl border border-white/90 bg-white/90 p-6 shadow-lg">
-          <h2 className="text-xl font-semibold mb-4">会话列表</h2>
+        <div className="rounded-2xl border border-white/90 dark:border-gray-700 bg-white/90 dark:bg-gray-800/90 p-6 shadow-lg">
+          <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-4">会话列表</h2>
 
           {loading ? (
             <div className="flex justify-center py-12">
               <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-primary"></div>
             </div>
           ) : conversations.length === 0 ? (
-            <div className="py-12 text-center text-gray-400">
+            <div className="py-12 text-center text-gray-400 dark:text-gray-500">
               <svg className="mx-auto mb-4 h-16 w-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
               </svg>
               <p>暂无消息</p>
             </div>
           ) : (
-            <div className="divide-y divide-gray-100">
+            <div className="divide-y divide-gray-100 dark:divide-gray-700">
               {conversations.map((conv) => (
                 <div
                   key={conv.userId}
                   onClick={() => setActiveChat({ userId: conv.userId, userName: conv.userName })}
-                  className="flex items-center gap-4 py-4 px-2 cursor-pointer hover:bg-gray-50 rounded-xl transition-colors"
+                  className="flex items-center gap-4 py-4 px-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-xl transition-colors"
                 >
                   <div className="relative flex-shrink-0">
                     <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-lg">
@@ -96,14 +96,14 @@ export default function MessagesPage() {
                   <div className="flex-grow min-w-0">
                     <div className="flex justify-between items-center">
                       <div className="flex items-center gap-2">
-                        <span className="font-semibold text-gray-800">{conv.userName}</span>
+                        <span className="font-semibold text-gray-800 dark:text-gray-100">{conv.userName}</span>
                         {!conv.isFriend && (
-                          <span className="text-xs text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">临时会话</span>
+                          <span className="text-xs text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 rounded">临时会话</span>
                         )}
                       </div>
-                      <span className="text-xs text-gray-400">{new Date(conv.lastTime).toLocaleTimeString()}</span>
+                      <span className="text-xs text-gray-400 dark:text-gray-500">{new Date(conv.lastTime).toLocaleTimeString()}</span>
                     </div>
-                    <p className="text-sm text-gray-500 truncate">{conv.lastMessage}</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 truncate">{conv.lastMessage}</p>
                   </div>
                 </div>
               ))}
