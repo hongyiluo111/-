@@ -21,7 +21,7 @@ export default function ProfilePage() {
   const [savingProfile, setSavingProfile] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const [name, setName] = useState('');
-  const [diamonds, setDiamonds] = useState(() => {
+  const [diamonds] = useState(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('diamonds');
       return saved ? parseInt(saved, 10) : 1000;

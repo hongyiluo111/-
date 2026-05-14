@@ -6,6 +6,7 @@ import { getGameColor } from '@/data/gameColors';
 import { useUserStore } from '@/store/user';
 import BookingModal from './BookingModal';
 import ChatModal from './ChatModal';
+import { SkeletonCard } from './Skeleton';
 import TiltCard from './TiltCard';
 import MagneticButton from './MagneticButton';
 
@@ -112,7 +113,7 @@ export default function CompanionList({ filters }: CompanionListProps) {
           method: 'POST',
           credentials: 'include',
         });
-      } catch (error) {
+      } catch {
         // 忽略心跳错误
       }
     };
@@ -263,8 +264,10 @@ export default function CompanionList({ filters }: CompanionListProps) {
       </div>
 
       {loading ? (
-        <div className="flex justify-center py-12">
-          <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-primary"></div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <SkeletonCard key={i} />
+          ))}
         </div>
       ) : filteredCompanions.length === 0 ? (
         <div className="py-12 text-center text-gray-500">
@@ -338,8 +341,10 @@ export default function CompanionList({ filters }: CompanionListProps) {
                         <span className="text-2xl font-bold text-primary">￥{companion.price}</span>
                         <span className="text-xs text-gray-400">/小时</span>
                       </div>
+                    </div>
 
-                      <div className="flex space-x-2">
+                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent p-4 pt-8 translate-y-full group-hover:translate-y-0 transition-transform duration-300 rounded-b-2xl">
+                      <div className="flex justify-end space-x-2">
                         <MagneticButton
                           onClick={() => {
                             if (isLoggedIn()) {
@@ -348,7 +353,7 @@ export default function CompanionList({ filters }: CompanionListProps) {
                             }
                             showLoginPrompt();
                           }}
-                          className="rounded-xl bg-gray-100 px-3 py-1.5 text-sm text-gray-700 transition-colors hover:bg-gray-200"
+                          className="rounded-lg bg-white/20 backdrop-blur-sm px-3 py-1.5 text-sm text-white transition-colors hover:bg-white/30"
                           strength={8}
                         >
                           聊天
@@ -361,7 +366,7 @@ export default function CompanionList({ filters }: CompanionListProps) {
                             }
                             showLoginPrompt();
                           }}
-                          className="rounded-xl border border-primary/30 bg-white px-3 py-1.5 text-sm text-primary transition-colors hover:bg-primary/5"
+                          className="rounded-lg border border-white/30 bg-white/10 backdrop-blur-sm px-3 py-1.5 text-sm text-white transition-colors hover:bg-white/20"
                           strength={8}
                         >
                           好友

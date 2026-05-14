@@ -14,7 +14,7 @@ interface CreateOrderBody {
 export async function POST(request: NextRequest) {
   try {
     const body = (await request.json()) as CreateOrderBody;
-    const { companionId, companionName, companionAvatar, game, rank, price } = body;
+    const { companionId, companionName, game, price } = body;
 
     const token = request.cookies.get('token')?.value;
     if (!token) {

@@ -61,7 +61,7 @@ export default function FilterBar({ onFilterChange, initialGame }: FilterBarProp
   };
 
   return (
-    <div className="card mb-8 border border-white/90 shadow-lg">
+    <div className="card mb-8 sticky top-16 z-30 bg-white/95 dark:bg-gray-800/95 backdrop-blur-md border border-white/90 shadow-lg transition-shadow duration-300">
       <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <h2 className="text-xl font-semibold">筛选条件</h2>
         <p className="text-sm text-gray-500">可组合筛选，快速定位心仪陪玩</p>

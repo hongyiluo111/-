@@ -5,6 +5,8 @@ import Navbar from '@/components/Navbar';
 import QueryProvider from '@/components/QueryProvider';
 import AIService from '@/components/AIService';
 import ThemeProvider from '@/components/ThemeProvider';
+import { ToastProvider } from '@/components/Toast';
+import OrderNotification from '@/components/OrderNotification';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -23,9 +25,12 @@ export default function RootLayout({
       <body className={inter.className}>
         <ThemeProvider>
           <QueryProvider>
-            <Navbar />
-            <div className="pt-16 page-enter">{children}</div>
-            <AIService />
+            <ToastProvider>
+              <Navbar />
+              <div className="pt-16 page-enter">{children}</div>
+              <AIService />
+              <OrderNotification />
+            </ToastProvider>
           </QueryProvider>
         </ThemeProvider>
       </body>

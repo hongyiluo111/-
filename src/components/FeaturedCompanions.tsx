@@ -9,6 +9,7 @@ import ChatModal from './ChatModal';
 import TiltCard from './TiltCard';
 import MagneticButton from './MagneticButton';
 import { useInView } from '@/hooks/useInView';
+import { SkeletonCard } from './Skeleton';
 
 interface Companion {
   id: string;
@@ -79,7 +80,9 @@ function FeaturedCompanionCard({ companion, index, isOnline }: { companion: Comp
               <span className="text-2xl font-bold text-primary">￥{companion.price}</span>
               <span className="text-xs text-gray-400 dark:text-gray-500">/小时</span>
             </div>
-            <div className="flex space-x-2">
+          </div>
+          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent p-4 pt-8 translate-y-full group-hover:translate-y-0 transition-transform duration-300 rounded-b-2xl">
+            <div className="flex justify-end space-x-2">
               <MagneticButton
                 onClick={() => {
                   if (user) {
@@ -88,7 +91,7 @@ function FeaturedCompanionCard({ companion, index, isOnline }: { companion: Comp
                     alert('请先登录');
                   }
                 }}
-                className="px-3 py-1.5 text-sm bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-lg transition-colors"
+                className="px-3 py-1.5 text-sm bg-white/20 backdrop-blur-sm text-white rounded-lg hover:bg-white/30 transition-colors"
                 strength={8}
               >
                 聊天
@@ -167,7 +170,21 @@ export default function FeaturedCompanions() {
     return () => clearInterval(interval);
   }, [featuredCompanions]);
 
-  if (!isReady) return null;
+  if (!isReady) {
+    return (
+      <div>
+        <div className="text-center mb-10">
+          <h2 className="text-3xl font-bold mb-3 text-gradient">热门陪玩</h2>
+          <p className="text-gray-500 dark:text-gray-400">来自各游戏的顶尖选手，为你提供最佳游戏体验</p>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <SkeletonCard key={i} />
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
