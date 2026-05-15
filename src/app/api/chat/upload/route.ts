@@ -9,6 +9,7 @@ const IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
 const AUDIO_TYPES = ['audio/webm', 'audio/mp3', 'audio/wav', 'audio/ogg', 'audio/mpeg'];
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
 const MAX_AUDIO_SIZE = 10 * 1024 * 1024;
+const ALLOWED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.webm', '.mp3', '.wav', '.ogg', '.mpeg'];
 
 export async function POST(request: NextRequest) {
   try {
@@ -49,7 +50,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '音频大小不能超过10MB' }, { status: 400 });
     }
 
-    const ext = path.extname(file.name) || (isImage ? '.png' : '.webm');
+    const ext = path.extname(file.name).toLowerCase() || (isImage ? '.png' : '.webm');
+    if (!ALLOWED_EXTENSIONS.includes(ext)) {
+      return NextResponse.json({ error: '不支持的文件扩展名' }, { status: 400 });
+    }
     const fileName = `${Date.now()}-${randomUUID().slice(0, 8)}${ext}`;
     const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'chat');
 

@@ -29,6 +29,16 @@ export async function POST(request: NextRequest) {
       data: { read: true },
     });
 
+    if (result.count > 0) {
+      try {
+        const { pusherServer } = await import('@/lib/pusher-server');
+        const channelName = `chat-${[decoded.userId, partnerId].sort().join('-')}`;
+        await pusherServer.trigger(channelName, 'messages-read', { readerId: decoded.userId });
+      } catch {
+        console.error('Pusher 已读通知失败');
+      }
+    }
+
     return NextResponse.json({ success: true, markedCount: result.count });
   } catch (error) {
     console.error('标记已读失败:', error);

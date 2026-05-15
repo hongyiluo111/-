@@ -2,6 +2,16 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { verifyToken } from '@/lib/jwt';
 
+function getLastMessagePreview(msg: { content: string; type: string; revoked: boolean }): string {
+  if (msg.revoked) return '[消息已撤回]';
+  switch (msg.type) {
+    case 'image': return '[图片]';
+    case 'file': return `[文件] ${msg.content}`;
+    case 'voice': return '[语音消息]';
+    default: return msg.content;
+  }
+}
+
 export async function GET(request: NextRequest) {
   try {
     const token = request.cookies.get('token')?.value;
@@ -37,12 +47,12 @@ export async function GET(request: NextRequest) {
         conversations[partnerId] = {
           userId: partnerId,
           userName: '',
-          lastMessage: msg.content,
+          lastMessage: getLastMessagePreview(msg),
           lastTime: msg.createdAt,
           unread: 0,
         };
       }
-      if (msg.receiverId === decoded.userId) {
+      if (msg.receiverId === decoded.userId && !msg.read && !msg.revoked) {
         conversations[partnerId].unread += 1;
       }
     }

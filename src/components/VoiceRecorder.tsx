@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import { useToast } from '@/components/Toast';
 
 interface VoiceRecorderProps {
   onSend: (fileUrl: string, duration: number) => void;
@@ -17,6 +18,9 @@ export default function VoiceRecorder({ onSend, onCancel, onShortRecording }: Vo
   const chunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const startTimeRef = useRef<number>(0);
+  const { showToast } = useToast();
+
+  const waveHeights = useMemo(() => Array.from({ length: 20 }, () => 8 + Math.random() * 16), []);
 
   const startRecording = useCallback(async () => {
     try {
@@ -62,8 +66,12 @@ export default function VoiceRecorder({ onSend, onCancel, onShortRecording }: Vo
           if (res.ok) {
             const data = await res.json();
             onSend(data.url, elapsed);
+          } else {
+            showToast('error', '语音上传失败');
           }
-        } catch { /* ignore */ } finally {
+        } catch {
+          showToast('error', '语音上传失败');
+        } finally {
           setUploading(false);
           setRecording(false);
           setDuration(0);
@@ -80,9 +88,10 @@ export default function VoiceRecorder({ onSend, onCancel, onShortRecording }: Vo
         setDuration(Math.round((Date.now() - startTimeRef.current) / 1000));
       }, 1000);
     } catch {
+      showToast('error', '麦克风权限被拒绝或不可用');
       onCancel();
     }
-  }, [onSend, onCancel]);
+  }, [onSend, onCancel, showToast]);
 
   const stopRecording = useCallback(() => {
     if (timerRef.current) {
@@ -162,7 +171,7 @@ export default function VoiceRecorder({ onSend, onCancel, onShortRecording }: Vo
           <div
             key={i}
             className="w-1 rounded-full bg-red-400 animate-pulse"
-            style={{ height: `${8 + Math.random() * 16}px`, animationDelay: `${i * 0.1}s` }}
+            style={{ height: `${waveHeights[i]}px`, animationDelay: `${i * 0.1}s` }}
           />
         ))}
       </div>
