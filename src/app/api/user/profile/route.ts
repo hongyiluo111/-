@@ -5,14 +5,15 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
+    const email = searchParams.get('email');
 
-    if (!userId) {
-      return NextResponse.json({ error: '缺少 userId' }, { status: 400 });
+    if (!userId && !email) {
+      return NextResponse.json({ error: '缺少 userId 或 email' }, { status: 400 });
     }
 
     const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { id: true, name: true },
+      where: userId ? { id: userId } : { email: email! },
+      select: { id: true, name: true, email: true },
     });
 
     if (!user) {

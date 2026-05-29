@@ -3,7 +3,6 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { loginUser } from '@/app/actions/auth.actions';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useUserStore } from '@/store/user';
@@ -24,7 +23,13 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      const result = await loginUser(email, password, rememberMe);
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, rememberMe }),
+        credentials: 'include',
+      });
+      const result = await res.json();
       if (!result.success) {
         setError(String(result.error || '登录失败'));
         return;

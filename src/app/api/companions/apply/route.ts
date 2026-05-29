@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { verifyToken } from '@/lib/jwt';
+import { getUserIdFromRequest } from '@/lib/auth';
 
 interface ApplyBody {
   name?: string;
@@ -8,20 +8,6 @@ interface ApplyBody {
   rank?: string;
   price?: number;
   description?: string;
-}
-
-function getUserIdFromRequest(request: NextRequest) {
-  const token = request.cookies.get('token')?.value;
-  if (!token) {
-    return null;
-  }
-
-  const decoded = verifyToken(token);
-  if (!decoded?.userId) {
-    return null;
-  }
-
-  return decoded.userId;
 }
 
 export async function POST(request: NextRequest) {

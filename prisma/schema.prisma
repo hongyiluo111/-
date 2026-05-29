@@ -19,36 +19,71 @@ model User {
   name      String
   role      String   @default("user")
   status    String   @default("active")
+  diamonds  Int      @default(0)
+  phone     String?
+  avatar    String?
+  bio       String?
+  settings  Json?
   lastSeen  DateTime @default(now())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  deletedAt DateTime?
 
   // 关联
   companions Companion[]
   orders     Order[]
+  reviews    Review[]
   notifications Notification[]
   sentMessages     ChatMessage[] @relation("SentMessages")
   receivedMessages ChatMessage[] @relation("ReceivedMessages")
   friends     Friend[] @relation("UserFriends")
   friendedBy  Friend[] @relation("FriendedBy")
+  ownedClubs  Club[]           @relation("ClubOwner")
+  clubMembers ClubMember[]
+  posts       Post[]
+  postLikes   PostLike[]
+
+  // 索引
+  @@index([lastSeen])
+  @@index([status, role])
+  @@index([createdAt])
+  @@index([deletedAt])
 }
 
 // 陪玩模型
 model Companion {
-  id          String   @id @default(cuid())
-  userId      String
-  name        String
-  game        String
-  rank        String
-  price       Decimal  @db.Decimal(10, 2)
-  description String?
-  avatar      String?
-  status      String   @default("pending")
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id            String   @id @default(cuid())
+  userId        String
+  name          String
+  game          String
+  rank          String
+  price         Decimal  @db.Decimal(10, 2)
+  description   String?
+  avatar        String?
+  status        String   @default("pending")
+  totalOrders   Int      @default(0)
+  totalEarnings Decimal  @default(0) @db.Decimal(10, 2)
+  rating        Float    @default(5.0)
+  ratingCount   Int      @default(0)
+  isOnline      Boolean  @default(false)
+  workSchedule  Json?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  deletedAt     DateTime?
 
   // 关联
-  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reviews  Review[]
+  earnings Earning[]
+
+  // 索引
+  @@index([userId])
+  @@index([status])
+  @@index([game])
+  @@index([game, status])
+  @@index([createdAt])
+  @@index([deletedAt])
+  @@index([isOnline])
 }
 
 // 订单模型
@@ -61,16 +96,35 @@ model Order {
   companionAvatar String?
   game            String
   price           Decimal  @db.Decimal(10, 2)
+  duration        Int?
   status          String   @default("pending")
   paymentId       String?
   paymentStatus   String   @default("unpaid")
   paymentMethod   String?
+  acceptedAt      DateTime?
+  rejectedAt      DateTime?
+  rejectReason    String?
+  startedAt       DateTime?
+  review          String?
+  rating          Int?
+  reviewedAt      DateTime?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
   completedAt     DateTime?
+  deletedAt       DateTime?
 
   // 关联
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // 索引
+  @@index([userId])
+  @@index([userId, status])
+  @@index([companionId])
+  @@index([companionId, status])
+  @@index([status])
+  @@index([paymentStatus])
+  @@index([createdAt])
+  @@index([deletedAt])
 }
 
 // 通知模型
@@ -86,6 +140,11 @@ model Notification {
 
   // 关联
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // 索引
+  @@index([userId])
+  @@index([userId, read])
+  @@index([createdAt])
 }
 
 // 聊天记录模型
@@ -94,14 +153,22 @@ model ChatMessage {
   senderId   String
   receiverId String
   content    String   @db.Text
+  type       String   @default("text")
+  fileUrl    String?
+  fileName   String?
+  fileSize   Int?
+  duration   Int?
+  revoked    Boolean  @default(false)
+  read       Boolean  @default(false)
   createdAt  DateTime @default(now())
 
-  // 关联
   sender   User @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
   receiver User @relation("ReceivedMessages", fields: [receiverId], references: [id], onDelete: Cascade)
 
   @@index([senderId, receiverId])
   @@index([receiverId])
+  @@index([receiverId, read])
+  @@index([createdAt])
 }
 
 // 好友模型
@@ -118,4 +185,138 @@ model Friend {
 
   @@unique([userId, friendId])
   @@index([friendId])
+}
+
+model PasswordReset {
+  id        String   @id @default(cuid())
+  email     String
+  token     String
+  used      Boolean  @default(false)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([token, email])
+  @@index([expiresAt])
+}
+
+// 评价模型
+model Review {
+  id          String   @id @default(cuid())
+  orderId     String   @unique
+  userId      String
+  companionId String
+  rating      Int
+  content     String?  @db.Text
+  createdAt   DateTime @default(now())
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  companion Companion @relation(fields: [companionId], references: [id], onDelete: Cascade)
+
+  @@index([companionId])
+  @@index([userId])
+  @@index([createdAt])
+}
+
+// 收入记录模型
+model Earning {
+  id          String   @id @default(cuid())
+  companionId String
+  orderId     String   @unique
+  amount      Decimal  @db.Decimal(10, 2)
+  status      String   @default("pending")
+  settledAt   DateTime?
+  createdAt   DateTime @default(now())
+
+  companion Companion @relation(fields: [companionId], references: [id], onDelete: Cascade)
+
+  @@index([companionId])
+  @@index([companionId, status])
+  @@index([createdAt])
+}
+
+// 管理员操作日志模型
+model AdminLog {
+  id        String   @id @default(cuid())
+  adminId   String
+  action    String
+  target    String
+  detail    Json?
+  createdAt DateTime @default(now())
+
+  @@index([adminId])
+  @@index([action])
+  @@index([createdAt])
+}
+
+// 俱乐部模型
+model Club {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?  @db.Text
+  avatar      String?
+  banner      String?
+  gameId      String
+  ownerId     String
+  memberCount Int      @default(1)
+  status      String   @default("active")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  owner   User          @relation("ClubOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  members ClubMember[]
+
+  @@index([gameId])
+  @@index([status])
+  @@index([memberCount])
+  @@index([createdAt])
+}
+
+// 俱乐部成员模型
+model ClubMember {
+  id       String   @id @default(cuid())
+  clubId   String
+  userId   String
+  role     String   @default("member")
+  joinedAt DateTime @default(now())
+
+  club Club @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([clubId, userId])
+  @@index([userId])
+}
+
+// 动态模型
+model Post {
+  id        String   @id @default(cuid())
+  userId    String
+  content   String   @db.Text
+  images    Json?
+  game      String?
+  type      String   @default("text")
+  likes     Int      @default(0)
+  comments  Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  postLikes PostLike[]
+
+  @@index([userId])
+  @@index([game])
+  @@index([createdAt])
+}
+
+// 动态点赞模型
+model PostLike {
+  id        String   @id @default(cuid())
+  postId    String
+  userId    String
+  createdAt DateTime @default(now())
+
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, userId])
+  @@index([userId])
 }

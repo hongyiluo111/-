@@ -2,8 +2,6 @@
 const nextConfig = {
   output: 'standalone',
   distDir: '.next',
-  assetPrefix: '/',
-  basePath: '',
   images: {
     remotePatterns: [
       {

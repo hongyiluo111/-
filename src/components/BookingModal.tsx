@@ -86,14 +86,20 @@ export default function BookingModal({ companion, onClose }: BookingModalProps) 
         <div className="space-y-6 p-6">
           <div className="flex items-center gap-4 rounded-xl bg-gray-50 dark:bg-gray-700 p-4">
             <div className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-full bg-gray-200">
-              <Image
-                src={companion.avatar}
-                alt={companion.name}
-                width={56}
-                height={56}
-                sizes="56px"
-                className="h-full w-full object-cover"
-              />
+              {companion.avatar ? (
+                <Image
+                  src={companion.avatar}
+                  alt={companion.name}
+                  width={56}
+                  height={56}
+                  sizes="56px"
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center text-xl text-gray-400">
+                  {companion.name.charAt(0)}
+                </div>
+              )}
             </div>
             <div>
               <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-100">{companion.name}</h4>

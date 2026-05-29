@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import Pusher from 'pusher-js';
+import { getPusher, releasePusher } from '@/lib/pusher';
 import { useUserStore } from '@/store/user';
 
 interface Message {
@@ -49,17 +49,10 @@ export default function Chat({ companionId, companionName }: ChatProps) {
 
   // Pusher 实时消息
   useEffect(() => {
-    const key = process.env.NEXT_PUBLIC_PUSHER_KEY;
-    const cluster = process.env.NEXT_PUBLIC_PUSHER_CLUSTER;
-    if (!key || !cluster) return;
-
-    let pusher: Pusher;
+    let pusher: ReturnType<typeof getPusher>;
     try {
-      pusher = new Pusher(key, { cluster });
-    } catch {
-      console.error('Pusher 初始化失败');
-      return;
-    }
+      pusher = getPusher();
+    } catch { return; }
 
     const channel = pusher.subscribe(`chat-${companionId}`);
 
@@ -70,6 +63,7 @@ export default function Chat({ companionId, companionName }: ChatProps) {
     return () => {
       channel.unbind('new-message');
       pusher.unsubscribe(`chat-${companionId}`);
+      releasePusher();
     };
   }, [companionId]);
 

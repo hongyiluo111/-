@@ -3,10 +3,22 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { useToast } from '@/components/Toast';
 
+const MAX_RECORDING_DURATION = 120;
+
 interface VoiceRecorderProps {
   onSend: (fileUrl: string, duration: number) => void;
   onCancel: () => void;
   onShortRecording?: () => void;
+}
+
+export function isVoiceSupported(): boolean {
+  if (typeof window === 'undefined') return false;
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return false;
+  try {
+    return typeof window.MediaRecorder !== 'undefined';
+  } catch {
+    return false;
+  }
 }
 
 export default function VoiceRecorder({ onSend, onCancel, onShortRecording }: VoiceRecorderProps) {
@@ -21,6 +33,16 @@ export default function VoiceRecorder({ onSend, onCancel, onShortRecording }: Vo
   const { showToast } = useToast();
 
   const waveHeights = useMemo(() => Array.from({ length: 20 }, () => 8 + Math.random() * 16), []);
+
+  const stopRecording = useCallback(() => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop();
+    }
+  }, []);
 
   const startRecording = useCallback(async () => {
     try {
@@ -85,23 +107,17 @@ export default function VoiceRecorder({ onSend, onCancel, onShortRecording }: Vo
       mediaRecorder.start(1000);
 
       timerRef.current = setInterval(() => {
-        setDuration(Math.round((Date.now() - startTimeRef.current) / 1000));
+        const elapsed = Math.round((Date.now() - startTimeRef.current) / 1000);
+        setDuration(elapsed);
+        if (elapsed >= MAX_RECORDING_DURATION) {
+          stopRecording();
+        }
       }, 1000);
     } catch {
       showToast('error', '麦克风权限被拒绝或不可用');
       onCancel();
     }
-  }, [onSend, onCancel, showToast]);
-
-  const stopRecording = useCallback(() => {
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-      mediaRecorderRef.current.stop();
-    }
-  }, []);
+  }, [onSend, onCancel, showToast, stopRecording]);
 
   const cancelRecording = useCallback(() => {
     if (timerRef.current) {
@@ -164,6 +180,7 @@ export default function VoiceRecorder({ onSend, onCancel, onShortRecording }: Vo
       <div className="flex items-center gap-1">
         <span className="h-3 w-3 rounded-full bg-red-500 animate-pulse" />
         <span className="text-sm font-mono text-red-600 dark:text-red-400">{formatTime(duration)}</span>
+        <span className="text-[10px] text-red-400">/{formatTime(MAX_RECORDING_DURATION)}</span>
       </div>
 
       <div className="flex-1 flex items-center gap-1">

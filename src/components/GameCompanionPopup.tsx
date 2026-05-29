@@ -5,7 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { getGameGradientStyle } from '@/data/gameColors';
 import BookingModal from './BookingModal';
-import ChatModal from './ChatModal';
+import { useRouter } from 'next/navigation';
 
 interface Companion {
   id: string;
@@ -24,8 +24,8 @@ interface Props {
 }
 
 export default function GameCompanionPopup({ game, onClose }: Props) {
+  const router = useRouter();
   const [companions, setCompanions] = useState<Companion[]>([]);
-  const [showChat, setShowChat] = useState<Companion | null>(null);
   const [showBooking, setShowBooking] = useState<Companion | null>(null);
 
   useEffect(() => {
@@ -104,7 +104,7 @@ export default function GameCompanionPopup({ game, onClose }: Props) {
                 <div className="flex items-center gap-2 flex-shrink-0">
                   <span className="text-sm font-bold text-primary">￥{companion.price}</span>
                   <button
-                    onClick={() => setShowChat(companion)}
+                    onClick={() => router.push('/messages?to=' + companion.userId)}
                     className="px-2.5 py-1 text-xs bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-lg transition-colors"
                   >
                     聊天
@@ -134,13 +134,6 @@ export default function GameCompanionPopup({ game, onClose }: Props) {
         </div>
       </div>
 
-      {showChat && (
-        <ChatModal
-          receiverId={showChat.userId}
-          receiverName={showChat.name}
-          onClose={() => setShowChat(null)}
-        />
-      )}
       {showBooking && (
         <BookingModal companion={showBooking} onClose={() => setShowBooking(null)} />
       )}

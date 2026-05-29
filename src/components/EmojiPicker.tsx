@@ -13,6 +13,27 @@ const EMOJI_CATEGORIES: Record<string, string[]> = {
 
 const STORAGE_KEY = 'emoji-recent';
 
+const EMOJI_KEYWORDS: Record<string, string[]> = {
+  '😀': ['笑', '开心', '高兴', 'happy'], '😂': ['笑', '大笑', '笑哭', 'laugh'],
+  '🤣': ['笑', '笑死', 'rofl'], '😊': ['微笑', '开心', 'smile'],
+  '😍': ['爱', '喜欢', '心动', 'heart'], '🥰': ['爱', '喜欢', 'love'],
+  '😘': ['亲', '飞吻', 'kiss'], '😜': ['调皮', '吐舌', 'wink'],
+  '😎': ['酷', '帅', 'cool'], '🥺': ['求', '可怜', 'pleading'],
+  '😢': ['哭', '伤心', 'sad'], '😭': ['哭', '大哭', 'sob'],
+  '😤': ['生气', '哼', 'angry'], '😡': ['愤怒', '生气', 'rage'],
+  '👍': ['赞', '好', '厉害', 'like'], '👎': ['踩', '差', 'dislike'],
+  '👏': ['鼓掌', '棒', 'clap'], '🙏': ['谢谢', '拜托', 'pray'],
+  '💪': ['加油', '力量', 'strong'], '❤️': ['心', '爱', 'heart'],
+  '🔥': ['火', '厉害', 'fire'], '⭐': ['星', '星星', 'star'],
+  '🎉': ['庆祝', '派对', 'party'], '💯': ['满分', '完美', '100'],
+  '🐶': ['狗', '小狗', 'dog'], '🐱': ['猫', '小猫', 'cat'],
+  '🐰': ['兔', '兔子', 'rabbit'], '🐻': ['熊', '小熊', 'bear'],
+  '🎮': ['游戏', '玩', 'game'], '🏆': ['冠军', '奖杯', 'trophy'],
+  '⚽': ['足球', 'ball'], '🏀': ['篮球', 'basketball'],
+  '🍎': ['苹果', 'apple'], '🍕': ['披萨', 'pizza'],
+  '🍔': ['汉堡', 'burger'], '☕': ['咖啡', '茶', 'coffee'],
+};
+
 interface EmojiPickerProps {
   onSelect: (emoji: string) => void;
   onClose: () => void;
@@ -54,7 +75,11 @@ export default function EmojiPicker({ onSelect, onClose }: EmojiPickerProps) {
     : EMOJI_CATEGORIES[activeCategory] || [];
 
   const filteredEmojis = search
-    ? Object.values(EMOJI_CATEGORIES).flat().filter((e, i, arr) => arr.indexOf(e) === i)
+    ? Object.values(EMOJI_CATEGORIES).flat().filter((e, i, arr) => {
+        if (arr.indexOf(e) !== i) return false;
+        const keywords = EMOJI_KEYWORDS[e] || [];
+        return keywords.some((kw) => kw.includes(search.toLowerCase()));
+      })
     : displayEmojis;
 
   return (

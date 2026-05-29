@@ -2,28 +2,18 @@
 
 import FilterBar from '@/components/FilterBar';
 import CompanionList from '@/components/CompanionList';
-import { useState, useEffect, Suspense } from 'react';
+import { useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 
 function FindCompanionContent() {
   const searchParams = useSearchParams();
   const [filters, setFilters] = useState({
-    game: '',
-    rank: '',
-    priceRange: ''
+    game: searchParams.get('game') || '',
+    rank: searchParams.get('rank') || '',
+    priceRange: searchParams.get('priceRange') || '',
+    search: searchParams.get('q') || '',
+    sort: searchParams.get('sort') || ''
   });
-
-  useEffect(() => {
-    const gameParam = searchParams.get('game');
-    if (gameParam) {
-      setFilters(prev => {
-        if (prev.game !== gameParam) {
-          return { ...prev, game: gameParam, rank: '', priceRange: '' };
-        }
-        return prev;
-      });
-    }
-  }, [searchParams]);
 
   return (
     <div className="min-h-screen flex flex-col">

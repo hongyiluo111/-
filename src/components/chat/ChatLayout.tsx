@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUserStore } from '@/store/user';
 import ConversationList from './ConversationList';
@@ -23,6 +23,7 @@ export default function ChatLayout() {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [activeName, setActiveName] = useState('');
   const [loading, setLoading] = useState(true);
+  const toParamProcessed = useRef(false);
 
   const fetchConversations = useCallback(async () => {
     try {
@@ -53,25 +54,41 @@ export default function ChatLayout() {
   }, [user, router, fetchConversations]);
 
   useEffect(() => {
+    if (toParamProcessed.current) return;
     const params = new URLSearchParams(window.location.search);
     const to = params.get('to');
     if (!to) return;
 
-    setActiveId(to);
+    toParamProcessed.current = true;
     window.history.replaceState({}, '', '/messages');
 
-    const conv = conversations.find((c) => c.userId === to);
+    const isEmail = to.includes('@');
+    const conv = conversations.find((c) =>
+      isEmail ? c.userId === to : c.userId === to
+    );
+
     if (conv) {
+      setActiveId(conv.userId);
       setActiveName(conv.userName);
     } else {
-      fetch(`/api/user/profile?userId=${to}`, { credentials: 'include' })
+      const queryParam = isEmail ? `email=${encodeURIComponent(to)}` : `userId=${to}`;
+      fetch(`/api/user/profile?${queryParam}`, { credentials: 'include' })
         .then((r) => r.ok ? r.json() : null)
         .then((data) => {
-          setActiveName(data?.name || data?.userName || to);
+          if (data?.id) {
+            setActiveId(data.id);
+            setActiveName(data.name || data.userName || to);
+          } else {
+            setActiveId(to);
+            setActiveName(to);
+          }
         })
-        .catch(() => setActiveName(to));
+        .catch(() => {
+          setActiveId(to);
+          setActiveName(to);
+        });
     }
-  }, []);
+  }, [conversations]);
 
   const handleSelect = (userId: string, userName: string) => {
     setActiveId(userId);

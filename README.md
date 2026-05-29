@@ -5,200 +5,234 @@
 ## 技术栈
 
 ### 前端
-- Next.js 15 (App Router)
-- React 18.2.0
-- TypeScript
-- Tailwind CSS + shadcn/ui
-- React Query (数据获取)
-- Zustand (状态管理)
-- Pusher JS (实时聊天/订单推送)
+- **Next.js 15** (App Router) — 全栈框架
+- **React 19** — UI 库
+- **TypeScript 5.4** — 类型安全
+- **Tailwind CSS 3.4** + **shadcn/ui** (Radix UI) — 样式与组件
+- **Zustand** — 全局状态管理
+- **TanStack React Query** — 服务端数据缓存
+- **Pusher JS** — 实时聊天 / 订单推送
+- **Lucide React** — 图标库
 
 ### 后端
-- Next.js Server Actions (服务端逻辑)
-- API Routes (支付回调、AI聊天、用户信息)
-- 无额外后端服务
-
-### 数据库
-- Prisma + MySQL
-- 本地数据库配置：localhost:3306, 用户名root, 密码123456, 数据库名game
-- 适配器: PrismaMariaDb
+- **Next.js API Routes** — RESTful API（支付回调、AI 聊天、用户信息等）
+- **Next.js Server Actions** — 表单提交与认证逻辑
+- **Prisma ORM + MySQL** (MariaDB 适配器) — 数据持久化
+- **JWT** (jsonwebtoken) — 无状态认证
+- **bcrypt** — 密码哈希
 
 ### 支付
-- 微信支付 SDK (wechatpay-node-v3)
-- 支付宝 SDK (alipay-sdk)
-- 订单表 + 状态机（防超发）
-
-### 认证
-- JWT Token 认证 (jsonwebtoken)
-- bcrypt 密码加密
+- **微信支付** (wechatpay-node-v3)
+- **支付宝** (alipay-sdk)
+- 订单状态机防超发，`paymentId` 关联支付与订单
 
 ### AI
-- 阿里云通义千问 API (DashScope)
+- **阿里云通义千问** (DashScope) — `qwen-turbo` 模型
 
-## 功能特性
+### 数据库
+- MySQL / MariaDB
+- 默认连接：`localhost:3306`，用户 `root`，数据库 `game`
+- Prisma Client 数据库推送（非迁移模式）：
+  ```bash
+  npx prisma db push && npx prisma generate
+  ```
 
-### 核心功能
-1. **用户认证**：登录、注册、登出、JWT Token认证
-2. **订单管理**：创建订单、查看订单、订单状态管理
-3. **陪玩管理**：成为陪玩、找陪玩、筛选陪玩
-4. **实时通信**：Pusher实时聊天、订单推送
-5. **支付集成**：微信支付、支付宝支付
-6. **AI助手**：侧边AI聊天助手（通义千问）
-7. **管理员后台**：用户管理、陪玩管理、订单管理
+---
 
-### 游戏支持
-- 三角洲行动
-- 王者荣耀
-- 英雄联盟
-- 英雄联盟手游
-- 和平精英
-- VALORANT
-- 金铲铲之战
-- 穿越火线
-- 第五人格
-- 蛋仔派对
-- 暗区突围
-- CS2
+## 快速开始
 
-## 安装与运行
-
-### 1. 克隆项目
-
-```bash
-git clone <项目地址>
-cd 电竞陪玩平台
-```
-
-### 2. 安装依赖
+### 1. 安装依赖
 
 ```bash
 npm install
 ```
 
-### 3. 配置数据库
+### 2. 配置环境变量
 
-确保本地MySQL数据库已启动，并且创建了名为`game`的数据库。
-
-### 4. 数据库迁移
-
-```bash
-npx prisma migrate dev --name init
-```
-
-### 5. 生成Prisma客户端
-
-```bash
-npx prisma generate
-```
-
-### 6. 启动开发服务器
-
-```bash
-npm run dev
-```
-
-项目将运行在 http://localhost:3000
-
-## 环境变量
-
-在`.env.local`文件中配置以下环境变量：
+复制 `.env.local` 并填写：
 
 ```env
-DATABASE_URL="mysql://root:123456@localhost:3306/game"
-JWT_SECRET="your-jwt-secret-key"
+# 必填
+DATABASE_URL="mysql://root:你的密码@localhost:3306/game?charset=utf8mb4"
+JWT_SECRET="随机生成的64位十六进制字符串"
+QWEN_API_KEY="sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 NEXT_PUBLIC_BASE_URL="http://localhost:3000"
+
+# 可选 — 实时推送
 NEXT_PUBLIC_PUSHER_KEY="your-pusher-key"
 NEXT_PUBLIC_PUSHER_CLUSTER="your-pusher-cluster"
-WECHAT_APPID="your-wechat-appid"
-WECHAT_MCHID="your-wechat-mchid"
-WECHAT_PUBLIC_KEY="your-wechat-public-key"
-WECHAT_PRIVATE_KEY="your-wechat-private-key"
-ALIPAY_APP_ID="your-alipay-appid"
-ALIPAY_PRIVATE_KEY="your-alipay-private-key"
-ALIPAY_PUBLIC_KEY="your-alipay-public-key"
+
+# 可选 — 微信支付
+WECHAT_APPID=""
+WECHAT_MCHID=""
+WECHAT_PUBLIC_KEY=""
+WECHAT_PRIVATE_KEY=""
+
+# 可选 — 支付宝（沙箱环境）
+ALIPAY_APP_ID=""
+ALIPAY_PRIVATE_KEY=""
+ALIPAY_PUBLIC_KEY=""
 ALIPAY_GATEWAY="https://openapi-sandbox.dl.alipaydev.com/gateway.do"
 ```
 
-## 生产部署
+> ⚠️ `JWT_SECRET` 和 `QWEN_API_KEY` 为必填项，未配置时服务将返回 503。
 
-### 1. 构建项目
-
-```bash
-npm run build
-```
-
-### 2. 启动生产服务器
+### 3. 初始化数据库
 
 ```bash
-npm start
+npx prisma db push && npx prisma generate
 ```
 
-## 技术文档
+### 4. 启动开发服务器
 
-### 订单状态机
+```bash
+npm run dev
+# → http://localhost:3000
+```
 
-订单状态流转：
-- PENDING (待接单) → ACCEPTED (已接单) → IN_PROGRESS (进行中) → COMPLETED (已完成)
-- PENDING (待接单) → CANCELLED (已取消)
-- ACCEPTED (已接单) → CANCELLED (已取消)
+### 生产构建
 
-### 认证系统
+```bash
+npm run build && npm start
+```
 
-- 使用JWT Token进行用户认证
-- Token有效期7天
-- 通过 `/api/auth/current-user` API 获取当前用户信息
-- 客户端组件通过fetch调用API，避免直接调用Server Actions
+---
 
-### 实时通信
+## 项目结构
 
-使用Pusher JS实现：
-- 订单状态实时更新
-- 陪玩与玩家实时聊天
-- 新订单推送通知
+```
+src/
+├── app/                        # Next.js App Router
+│   ├── actions/                # Server Actions (auth, order, user)
+│   ├── api/                    # API Routes
+│   │   ├── admin/              # 后台管理接口
+│   │   ├── ai/chat/            # AI 聊天接口
+│   │   ├── auth/               # 认证接口
+│   │   ├── orders/             # 订单接口
+│   │   ├── payment/            # 支付（创建/回调/通知）
+│   │   └── profile/            # 用户资料
+│   ├── admin/                  # 后台页面
+│   │   ├── companions/         # 陪玩管理
+│   │   ├── orders/             # 订单管理
+│   │   ├── users/              # 用户管理
+│   │   └── settings/           # 系统设置
+│   ├── find-companion/         # 找陪玩
+│   ├── become-companion/       # 成为陪玩
+│   ├── login/ register/        # 登录/注册
+│   ├── orders/                 # 我的订单
+│   ├── profile/                # 个人中心
+│   └── layout.tsx              # 根布局
+├── components/
+│   ├── ui/                     # 基础 UI 组件
+│   ├── MagneticButton.tsx      # 磁性跟随按钮
+│   ├── TiltCard.tsx            # 3D 倾斜卡片
+│   ├── ChatModal.tsx           # 公共聊天弹窗
+│   ├── BookingModal.tsx        # 预约弹窗
+│   ├── CompanionList.tsx       # 陪玩列表（分页 + IntersectionObserver）
+│   ├── FeaturedCompanions.tsx  # 热门陪玩
+│   ├── FilterBar.tsx           # 筛选栏（游戏/段位/价格）
+│   ├── GameList.tsx            # 游戏网格
+│   ├── Navbar.tsx              # 导航栏（滚动时自动隐藏）
+│   ├── Hero.tsx                # 首页展示区
+│   ├── Footer.tsx              # 页脚
+│   ├── AIService.tsx           # 侧边 AI 助手
+│   └── Skeleton.tsx            # 骨架屏占位
+├── data/
+│   ├── companions.ts           # 陪玩种子数据
+│   ├── gameColors.ts           # 游戏主题色映射
+│   └── orderConstants.ts       # 订单状态常量
+├── hooks/
+│   ├── useReducedMotion.ts     # 系统减弱动画偏好检测
+│   └── useIsDesktop.ts         # 桌面端设备检测
+├── lib/
+│   ├── db.ts                   # Prisma 客户端单例
+│   ├── jwt.ts                  # JWT 签发与验证
+│   ├── payment.ts              # 支付 SDK 封装
+│   └── pusher.ts               # Pusher 服务端配置
+├── store/
+│   └── user.ts                 # Zustand 用户状态
+├── utils/
+│   ├── date.ts                 # formatDate
+│   └── order-state-machine.ts  # 订单状态流转约束
+└── prisma/
+    └── schema.prisma           # 数据模型定义
+```
 
-### AI助手
+---
 
-- 使用阿里云通义千问API
-- 侧边聊天窗口，支持展开/收起
-- 实时消息发送和接收
+## UI/UX 特性
 
-### 支付流程
+### 交互动画
+- **磁性按钮** (`MagneticButton`) — 鼠标靠近时按钮跟随光标偏移，按压时缩放到 97%
+- **3D 倾斜卡片** (`TiltCard`) — 鼠标悬停时卡片随光标轻倾斜，带光泽效果
+- 以上效果**仅桌面端**生效，通过 `pointer: fine` 媒体查询检测
+- 完整兼容 `prefers-reduced-motion: reduce`，开启后动画自动禁用
 
-1. 用户创建订单
-2. 选择支付方式（微信支付/支付宝）
-3. 调用支付SDK生成支付链接
-4. 用户完成支付
-5. 支付回调更新订单状态
+### 其他交互
+- **滚动隐藏导航栏** — 向下滚动时导航栏自动收起，停止后重新显示
+- **IntersectionObserver 渐进显示** — 陪玩卡片进入视口时 opacity 渐入
+- **骨架屏** — 陪玩列表加载中自动展示骨架屏占位
+- **按钮 Ripple 波纹** — 全局按钮点击波纹反馈
+- **空状态与错误处理** — 所有列表/订单页均有空状态和错误提示
 
-## 代码规范
+---
 
-### 组件规范
-- 客户端组件使用 `'use client'` 指令
-- 避免在客户端组件中直接调用Server Actions
-- 使用API路由进行客户端与服务端的数据交互
+## 数据库模型
 
-### 样式规范
-- 使用Tailwind CSS进行样式编写
-- 不使用 `<style jsx>` 标签（Next.js 15不支持）
-- 使用 `cn()` 工具函数合并类名
+| 模型 | 说明 |
+|------|------|
+| **User** | 用户（id, email, password, name, role, status, diamonds） |
+| **Companion** | 陪玩（绑定 userId, game, rank, price, status） |
+| **Order** | 订单（userId, companionId, price, status, paymentId, paymentStatus） |
+| **Notification** | 通知（userId, type, title, message, read） |
+| **ChatMessage** | 聊天记录（senderId, receiverId, content, type） |
+| **Friend** | 好友关系 |
 
-### 状态管理
-- 使用Zustand进行全局状态管理
-- 用户状态通过API获取并存储在Zustand store中
+---
 
-## 贡献指南
+## 订单状态流转
 
-1. Fork 项目
-2. 创建功能分支 (`git checkout -b feature/amazing-feature`)
-3. 提交更改 (`git commit -m 'Add some amazing feature'`)
-4. 推送到分支 (`git push origin feature/amazing-feature`)
-5. 打开 Pull Request
+```
+PENDING ──→ ACCEPTED ──→ IN_PROGRESS ──→ COMPLETED
+   │            │
+   └── CANCELLED ←────────┘
+```
+
+状态约束通过 `order-state-machine.ts` 中的 `canTransition()` 函数实现。
+
+---
+
+## 支付流程
+
+```
+用户创建订单 → 选择支付方式 → /api/payment/create 生成 paymentUrl + paymentId
+→ 存储 paymentId 到 Order 表 → 用户完成支付
+→ 支付宝异步通知 /api/payment/alipay/notify（根据 paymentId 查找订单）
+→ 更新 paymentStatus = 'paid'
+```
+
+---
+
+## 认证与安全
+
+- **JWT Token** — 7 天有效期，存储在 httpOnly Cookie 中
+- **密码** — bcrypt 哈希，API 响应中不返回密码字段（`select` 排除）
+- **`JWT_SECRET`** — 必填环境变量，缺失时直接抛出错误拒绝启动
+- **`QWEN_API_KEY`** — 仅通过环境变量注入，源码中无硬编码
+
+---
+
+## 公共模块
+
+| 模块 | 用途 |
+|------|------|
+| `@/data/gameColors` | 12 款游戏的主题色 + `getGameColor()` 工具函数 |
+| `@/utils/date` | `formatDate()` 日期格式化 |
+| `@/data/orderConstants` | `statusLabels` / `statusColors` / `paymentLabels` 常量 |
+| `@/components/ChatModal` | 陪玩聊天弹窗（AI 对话 + 历史记录） |
+
+---
 
 ## 许可证
 
 MIT License
-
-## 联系我们
-
-- 邮箱：contact@hongyigaming.com
-- 官网：https://hongyigaming.com

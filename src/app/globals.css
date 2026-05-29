@@ -427,21 +427,20 @@ html {
   background-size: 128px 128px;
 }
 
-/* ====== 鼠标光晕 ====== */
-.mouse-glow {
-  position: fixed;
-  width: 400px;
-  height: 400px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(25, 118, 210, 0.08) 0%, transparent 70%);
-  pointer-events: none;
-  z-index: 1;
-  transform: translate(-50%, -50%);
-  transition: left 0.3s ease-out, top 0.3s ease-out;
+/* ====== 消息滑入 ====== */
+@keyframes messageSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.dark .mouse-glow {
-  background: radial-gradient(circle, rgba(100, 181, 246, 0.06) 0%, transparent 70%);
+.animate-message-in {
+  animation: messageSlideIn 0.2s ease-out forwards;
 }
 
 /* ====== 数字滚动 ====== */
@@ -556,10 +555,6 @@ html {
   }
 
   .hero-particles span {
-    display: none !important;
-  }
-
-  .mouse-glow {
     display: none !important;
   }
 

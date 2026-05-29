@@ -7,6 +7,16 @@ const rateLimitStore = new Map<string, RateLimitEntry>();
 
 const DEFAULT_WINDOW_MS = 60000;
 const DEFAULT_MAX_REQUESTS = 30;
+const CLEANUP_INTERVAL = 5 * 60 * 1000;
+
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, entry] of rateLimitStore) {
+    if (now >= entry.resetTime) {
+      rateLimitStore.delete(key);
+    }
+  }
+}, CLEANUP_INTERVAL);
 
 export function rateLimit(
   key: string,

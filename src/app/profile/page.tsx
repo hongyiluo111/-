@@ -70,7 +70,9 @@ export default function ProfilePage() {
 
   const titleText = useMemo(() => {
     if (!user) return '个人中心';
-    return user.role === 'admin' ? '管理员中心' : '个人中心';
+    if (user.role === 'admin') return '管理员中心';
+    if (user.role === 'club_admin') return '俱乐部管理中心';
+    return '个人中心';
   }, [user]);
 
   const resetMessages = () => { setStatusMessage(''); setErrorMessage(''); };
@@ -209,7 +211,7 @@ export default function ProfilePage() {
                   <div className="flex flex-wrap items-center gap-3">
                     <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-100">{user.name}</h2>
                     <span className="rounded-full bg-blue-50 dark:bg-blue-900/30 px-3 py-1 text-xs font-medium text-blue-700 dark:text-blue-400">
-                      {user.role === 'admin' ? '管理员' : '普通用户'}
+                      {user.role === 'admin' ? '管理员' : user.role === 'club_admin' ? '俱乐部管理员' : user.role === 'companion' ? '陪玩' : '普通用户'}
                     </span>
                     <span className="rounded-full bg-yellow-50 dark:bg-yellow-900/30 px-3 py-1 text-xs font-medium text-yellow-700 dark:text-yellow-400">
                       钻石 {diamonds}

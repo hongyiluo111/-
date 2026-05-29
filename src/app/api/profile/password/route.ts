@@ -1,21 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcrypt';
 import { prisma } from '@/lib/db';
-import { verifyToken } from '@/lib/jwt';
-
-function getUserIdFromRequest(request: NextRequest) {
-  const token = request.cookies.get('token')?.value;
-  if (!token) {
-    return null;
-  }
-
-  const decoded = verifyToken(token);
-  if (!decoded?.userId) {
-    return null;
-  }
-
-  return decoded.userId;
-}
+import { getUserIdFromRequest } from '@/lib/auth';
 
 export async function POST(request: NextRequest) {
   try {

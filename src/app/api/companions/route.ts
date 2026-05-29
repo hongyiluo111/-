@@ -30,6 +30,9 @@ export async function GET() {
         avatar: c.avatar || '',
         userId: c.userId,
         userName: c.user.name,
+        rating: Number(c.rating) || 0,
+        ratingCount: c.ratingCount || 0,
+        totalOrders: c.totalOrders || 0,
       })),
     };
 

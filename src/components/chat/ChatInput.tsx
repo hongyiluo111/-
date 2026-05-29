@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import EmojiPicker from '@/components/EmojiPicker';
-import VoiceRecorder from '@/components/VoiceRecorder';
+import VoiceRecorder, { isVoiceSupported } from '@/components/VoiceRecorder';
 import { useToast } from '@/components/Toast';
 
 interface ChatInputProps {
@@ -17,9 +17,15 @@ export default function ChatInput({ onSend, onTyping, disabled, placeholder = '�
   const [showEmoji, setShowEmoji] = useState(false);
   const [showVoice, setShowVoice] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [voiceSupported, setVoiceSupported] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const lastTypingRef = useRef(0);
   const { showToast } = useToast();
+
+  useEffect(() => {
+    setVoiceSupported(isVoiceSupported());
+  }, []);
 
   const handleTextChange = (value: string) => {
     setText(value);
@@ -36,6 +42,14 @@ export default function ChatInput({ onSend, onTyping, disabled, placeholder = '�
     onSend({ content: trimmed, type: 'text' });
     setText('');
     setShowEmoji(false);
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+    }
+  };
+
+  const autoResize = (el: HTMLTextAreaElement) => {
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, 128) + 'px';
   };
 
   const handleEmojiSelect = (emoji: string) => {
@@ -129,24 +143,26 @@ export default function ChatInput({ onSend, onTyping, disabled, placeholder = '�
         </button>
         <input ref={fileInputRef} type="file" accept="image/*,audio/*" className="hidden" onChange={handleFileUpload} />
 
-        <button
-          onClick={() => setShowVoice(true)}
-          className="flex items-center justify-center h-9 w-9 rounded-full text-gray-400 hover:text-primary hover:bg-primary/10 transition-colors"
-          title="语音消息"
-        >
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
-            <path strokeLinecap="round" strokeLinejoin="round" d="M19 10v2a7 7 0 0 1-14 0v-2" />
-            <line x1="12" y1="19" x2="12" y2="23" />
-            <line x1="8" y1="23" x2="16" y2="23" />
-          </svg>
-        </button>
+        {voiceSupported && (
+          <button
+            onClick={() => setShowVoice(true)}
+            className="flex items-center justify-center h-9 w-9 rounded-full text-gray-400 hover:text-primary hover:bg-primary/10 transition-colors"
+            title="语音消息"
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19 10v2a7 7 0 0 1-14 0v-2" />
+              <line x1="12" y1="19" x2="12" y2="23" />
+              <line x1="8" y1="23" x2="16" y2="23" />
+            </svg>
+          </button>
+        )}
 
         <div className="flex-1 relative">
-          <input
-            type="text"
+          <textarea
+            ref={textareaRef}
             value={text}
-            onChange={(e) => handleTextChange(e.target.value)}
+            onChange={(e) => { handleTextChange(e.target.value); autoResize(e.target); }}
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
@@ -155,7 +171,8 @@ export default function ChatInput({ onSend, onTyping, disabled, placeholder = '�
             }}
             placeholder={placeholder}
             disabled={disabled}
-            className="w-full rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2 text-sm text-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary disabled:opacity-50"
+            rows={1}
+            className="w-full rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2 text-sm text-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary disabled:opacity-50 resize-none max-h-32 overflow-y-auto"
           />
         </div>
 

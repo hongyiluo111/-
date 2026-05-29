@@ -53,6 +53,14 @@ export async function POST(request: NextRequest) {
       data: { revoked: true },
     });
 
+    try {
+      const { pusherServer } = await import('@/lib/pusher-server');
+      const channelName = `chat-${[message.senderId, message.receiverId].sort().join('-')}`;
+      await pusherServer.trigger(channelName, 'message-revoked', { messageId });
+    } catch {
+      console.error('Pusher 撤回通知失败');
+    }
+
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('消息撤回失败:', error);

@@ -3,7 +3,6 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { registerUser } from '@/app/actions/auth.actions';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 
@@ -29,7 +28,13 @@ export default function RegisterPage() {
     setIsLoading(true);
 
     try {
-      const result = await registerUser(name, email, password);
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password }),
+        credentials: 'include',
+      });
+      const result = await res.json();
       if (result.success) {
         router.push('/login');
       } else {

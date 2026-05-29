@@ -253,10 +253,13 @@ export default function UserManagement() {
                       <td>
                         <span
                           className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${
-                            user.role === 'admin' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-700'
+                            user.role === 'admin' ? 'bg-blue-100 text-blue-800' :
+                            user.role === 'club_admin' ? 'bg-purple-100 text-purple-800' :
+                            user.role === 'companion' ? 'bg-green-100 text-green-800' :
+                            'bg-gray-100 text-gray-700'
                           }`}
                         >
-                          {user.role}
+                          {user.role === 'admin' ? '管理员' : user.role === 'club_admin' ? '俱乐部管理员' : user.role === 'companion' ? '陪玩' : '普通用户'}
                         </span>
                       </td>
                       <td>

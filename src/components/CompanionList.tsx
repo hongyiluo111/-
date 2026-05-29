@@ -5,10 +5,10 @@ import Image from 'next/image';
 import { getGameColor } from '@/data/gameColors';
 import { useUserStore } from '@/store/user';
 import BookingModal from './BookingModal';
-import ChatModal from './ChatModal';
 import { SkeletonCard } from './Skeleton';
 import TiltCard from './TiltCard';
 import MagneticButton from './MagneticButton';
+import { useRouter } from 'next/navigation';
 
 interface Companion {
   id: string;
@@ -19,6 +19,9 @@ interface Companion {
   price: number;
   description: string;
   avatar: string;
+  rating: number;
+  ratingCount: number;
+  totalOrders: number;
 }
 
 const ITEMS_PER_PAGE = 16;
@@ -29,6 +32,8 @@ interface CompanionListProps {
     game: string;
     rank: string;
     priceRange: string;
+    search?: string;
+    sort?: string;
   };
 }
 
@@ -51,10 +56,10 @@ function matchesPriceRange(price: number, priceRange: string) {
 
 export default function CompanionList({ filters }: CompanionListProps) {
   const { user, setUser } = useUserStore();
+  const router = useRouter();
   const [companions, setCompanions] = useState<Companion[]>([]);
   const [onlineStatus, setOnlineStatus] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(true);
-  const [chatCompanion, setChatCompanion] = useState<Companion | null>(null);
   const [bookingCompanion, setBookingCompanion] = useState<Companion | null>(null);
   const [showLoginAlert, setShowLoginAlert] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -169,12 +174,20 @@ export default function CompanionList({ filters }: CompanionListProps) {
           return false;
         }
 
+        if (filters?.search && !companion.name.toLowerCase().includes(filters.search.toLowerCase())) {
+          return false;
+        }
+
         return matchesPriceRange(companion.price, filters?.priceRange || '');
       })
       .sort((a, b) => {
+        if (filters?.sort === 'price_asc') return a.price - b.price;
+        if (filters?.sort === 'price_desc') return b.price - a.price;
+        if (filters?.sort === 'rating') return b.rating - a.rating;
+        if (filters?.sort === 'orders') return b.totalOrders - a.totalOrders;
         const aOnline = onlineStatus[a.userId] ? 1 : 0;
         const bOnline = onlineStatus[b.userId] ? 1 : 0;
-        return bOnline - aOnline; // 在线的排在前面
+        return bOnline - aOnline;
       });
   }, [companions, filters, onlineStatus]);
 
@@ -300,7 +313,7 @@ export default function CompanionList({ filters }: CompanionListProps) {
                   <div className={`h-2 bg-gradient-to-r ${gameColor}`} />
 
                   <div className="p-5">
-                    <div className="mb-4 flex items-center">
+                    <div className="mb-4 flex items-center cursor-pointer" onClick={() => router.push(`/companion/${companion.id}`)}>
                       <div className="relative">
                         <div className="h-16 w-16 overflow-hidden rounded-full ring-2 ring-primary ring-offset-2 bg-gray-200">
                           {companion.avatar ? (
@@ -327,14 +340,30 @@ export default function CompanionList({ filters }: CompanionListProps) {
                       </div>
 
                       <div className="ml-3">
-                        <h3 className="text-lg font-semibold text-gray-800">{companion.name}</h3>
+                        <h3 className="text-lg font-semibold text-gray-800 hover:text-primary transition-colors">{companion.name}</h3>
                         <p className={`bg-gradient-to-r bg-clip-text text-sm font-medium text-transparent ${gameColor}`}>
                           {companion.game} · {companion.rank}
                         </p>
                       </div>
                     </div>
 
-                    <p className="mb-4 flex-grow text-sm leading-relaxed text-gray-600">{companion.description}</p>
+                    <p className="mb-3 flex-grow text-sm leading-relaxed text-gray-600">{companion.description}</p>
+
+                    {companion.ratingCount > 0 && (
+                      <div className="mb-3 flex items-center gap-2">
+                        <div className="flex items-center">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <svg key={star} className={`h-4 w-4 ${star <= Math.round(companion.rating / companion.ratingCount) ? 'text-yellow-400' : 'text-gray-300'}`} fill="currentColor" viewBox="0 0 20 20">
+                              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                            </svg>
+                          ))}
+                        </div>
+                        <span className="text-xs text-gray-500">{companion.ratingCount}条评价</span>
+                        {companion.totalOrders > 0 && (
+                          <span className="text-xs text-gray-400">· {companion.totalOrders}单</span>
+                        )}
+                      </div>
+                    )}
 
                     <div className="flex items-center justify-between border-t border-gray-100/80 pt-3">
                       <div className="flex flex-col">
@@ -348,7 +377,7 @@ export default function CompanionList({ filters }: CompanionListProps) {
                         <MagneticButton
                           onClick={() => {
                             if (isLoggedIn()) {
-                              setChatCompanion(companion);
+                              router.push('/messages?to=' + companion.userId);
                               return;
                             }
                             showLoginPrompt();
@@ -426,13 +455,6 @@ export default function CompanionList({ filters }: CompanionListProps) {
         </>
       )}
 
-      {chatCompanion && (
-        <ChatModal
-          receiverId={chatCompanion.userId}
-          receiverName={chatCompanion.name}
-          onClose={() => setChatCompanion(null)}
-        />
-      )}
       {bookingCompanion && <BookingModal companion={bookingCompanion} onClose={() => setBookingCompanion(null)} />}
 
       {showLoginAlert && (

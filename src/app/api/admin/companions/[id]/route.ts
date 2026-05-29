@@ -1,20 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { verifyToken } from '@/lib/jwt';
-
-function getAdminFromRequest(request: NextRequest) {
-  const token = request.cookies.get('token')?.value;
-  if (!token) {
-    return { error: NextResponse.json({ error: '未登录' }, { status: 401 }) };
-  }
-
-  const user = verifyToken(token);
-  if (!user || user.role !== 'admin') {
-    return { error: NextResponse.json({ error: '无权限' }, { status: 403 }) };
-  }
-
-  return { user };
-}
+import { requireAdmin } from '@/lib/auth';
 
 interface RouteContext {
   params: Promise<{
@@ -23,7 +9,7 @@ interface RouteContext {
 }
 
 export async function PATCH(request: NextRequest, { params }: RouteContext) {
-  const auth = getAdminFromRequest(request);
+  const auth = requireAdmin(request);
   if ('error' in auth) {
     return auth.error;
   }
@@ -85,7 +71,7 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
 }
 
 export async function DELETE(request: NextRequest, { params }: RouteContext) {
-  const auth = getAdminFromRequest(request);
+  const auth = requireAdmin(request);
   if ('error' in auth) {
     return auth.error;
   }

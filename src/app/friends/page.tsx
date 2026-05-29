@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUserStore } from '@/store/user';
-import ChatModal from '@/components/ChatModal';
 
 interface Friend {
   id: string;
@@ -28,7 +27,6 @@ export default function FriendsPage() {
   const [searchError, setSearchError] = useState('');
   const [addError, setAddError] = useState('');
   const [addSuccess, setAddSuccess] = useState('');
-  const [activeChat, setActiveChat] = useState<{ userId: string; userName: string } | null>(null);
 
   const loadData = useCallback(async () => {
     try {
@@ -176,7 +174,7 @@ export default function FriendsPage() {
               {friends.map((f) => (
                 <div
                   key={f.id}
-                  onClick={() => setActiveChat({ userId: f.userId, userName: f.name })}
+                  onClick={() => router.push('/messages?to=' + f.userId)}
                   className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer transition-colors"
                 >
                   <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
@@ -193,13 +191,6 @@ export default function FriendsPage() {
         </div>
       </div>
 
-      {activeChat && (
-        <ChatModal
-          receiverId={activeChat.userId}
-          receiverName={activeChat.userName}
-          onClose={() => setActiveChat(null)}
-        />
-      )}
     </div>
   );
 }

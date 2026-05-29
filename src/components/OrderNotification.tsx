@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import Pusher from 'pusher-js';
+import { getPusher, releasePusher } from '@/lib/pusher';
 import { useToast } from './Toast';
 
 interface Notification {
@@ -16,17 +16,10 @@ export default function OrderNotification() {
   const { showToast } = useToast();
 
   useEffect(() => {
-    const key = process.env.NEXT_PUBLIC_PUSHER_KEY;
-    const cluster = process.env.NEXT_PUBLIC_PUSHER_CLUSTER;
-    if (!key || !cluster) return;
-
-    let pusher: Pusher;
+    let pusher: ReturnType<typeof getPusher>;
     try {
-      pusher = new Pusher(key, { cluster });
-    } catch {
-      console.error('Pusher 初始化失败');
-      return;
-    }
+      pusher = getPusher();
+    } catch { return; }
 
     const channel = pusher.subscribe('order-notifications');
 
@@ -36,7 +29,7 @@ export default function OrderNotification() {
 
     return () => {
       pusher.unsubscribe('order-notifications');
-      pusher.disconnect();
+      releasePusher();
     };
   }, [showToast]);
 

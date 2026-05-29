@@ -20,19 +20,16 @@ export async function GET(request: NextRequest) {
     const decoded = verifyToken(token);
     if (!decoded) return NextResponse.json({ error: '登录已过期' }, { status: 401 });
 
-    // 获取所有相关消息
+    const userId = decoded.userId;
+
     const messages = await prisma.chatMessage.findMany({
       where: {
-        OR: [
-          { senderId: decoded.userId },
-          { receiverId: decoded.userId },
-        ],
+        OR: [{ senderId: userId }, { receiverId: userId }],
       },
       orderBy: { createdAt: 'desc' },
-      take: 500,
+      take: 200,
     });
 
-    // 按对话分组
     const conversations: Record<string, {
       userId: string;
       userName: string;
@@ -42,7 +39,7 @@ export async function GET(request: NextRequest) {
     }> = {};
 
     for (const msg of messages) {
-      const partnerId = msg.senderId === decoded.userId ? msg.receiverId : msg.senderId;
+      const partnerId = msg.senderId === userId ? msg.receiverId : msg.senderId;
       if (!conversations[partnerId]) {
         conversations[partnerId] = {
           userId: partnerId,
@@ -52,12 +49,11 @@ export async function GET(request: NextRequest) {
           unread: 0,
         };
       }
-      if (msg.receiverId === decoded.userId && !msg.read && !msg.revoked) {
+      if (msg.receiverId === userId && !msg.read && !msg.revoked) {
         conversations[partnerId].unread += 1;
       }
     }
 
-    // 获取用户名称
     const userIds = Object.keys(conversations);
     if (userIds.length > 0) {
       const users = await prisma.user.findMany({

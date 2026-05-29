@@ -3,11 +3,9 @@
 import Link from 'next/link';
 import { useState, useEffect, useRef } from 'react';
 import { useUserStore } from '@/store/user';
-import { useRouter, usePathname } from 'next/navigation';
-import { logoutUser } from '@/app/actions/auth.actions';
+import { usePathname } from 'next/navigation';
 
 export default function Navbar() {
-  const router = useRouter();
   const pathname = usePathname();
   const { user, setUser, logout } = useUserStore();
   const [isOpen, setIsOpen] = useState(false);
@@ -112,8 +110,12 @@ export default function Navbar() {
 
   const handleLogout = async () => {
     try {
-      const result = await logoutUser();
-      if (result.success) { logout(); router.push('/login'); }
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include',
+      });
+      logout();
+      window.location.href = '/login';
     } catch { /* ignore */ }
   };
 
@@ -133,6 +135,15 @@ export default function Navbar() {
                   <Link href="/" className={`nav-link ${isActive('/') ? 'nav-link-active' : ''}`}>首页</Link>
                   <Link href="/find-companion" className={`nav-link ${isActive('/find-companion') ? 'nav-link-active' : ''}`}>找陪玩</Link>
                   <Link href="/become-companion" className={`nav-link ${isActive('/become-companion') ? 'nav-link-active' : ''}`}>成为陪玩</Link>
+                  <Link href="/clubs" className={`nav-link ${isActive('/clubs') ? 'nav-link-active' : ''}`}>俱乐部</Link>
+                  <Link href="/rankings" className={`nav-link ${isActive('/rankings') ? 'nav-link-active' : ''}`}>排行榜</Link>
+                  <Link href="/feed" className={`nav-link ${isActive('/feed') ? 'nav-link-active' : ''}`}>动态</Link>
+                  {user && (user.role === 'companion' || user.role === 'admin') && (
+                    <Link href="/companion/dashboard" className={`nav-link ${isActive('/companion') ? 'nav-link-active' : ''}`}>陪玩工作台</Link>
+                  )}
+                  {user && (user.role === 'club_admin' || user.role === 'admin') && (
+                    <Link href="/clubs/create" className={`nav-link ${isActive('/clubs/create') ? 'nav-link-active' : ''}`}>俱乐部管理</Link>
+                  )}
                 </div>
               </div>
             </div>
@@ -217,6 +228,15 @@ export default function Navbar() {
               <Link href="/" className={`block nav-link ${isActive('/') ? 'nav-link-active' : ''}`} onClick={() => setIsOpen(false)}>首页</Link>
               <Link href="/find-companion" className={`block nav-link ${isActive('/find-companion') ? 'nav-link-active' : ''}`} onClick={() => setIsOpen(false)}>找陪玩</Link>
               <Link href="/become-companion" className={`block nav-link ${isActive('/become-companion') ? 'nav-link-active' : ''}`} onClick={() => setIsOpen(false)}>成为陪玩</Link>
+              <Link href="/clubs" className={`block nav-link ${isActive('/clubs') ? 'nav-link-active' : ''}`} onClick={() => setIsOpen(false)}>俱乐部</Link>
+              <Link href="/rankings" className={`block nav-link ${isActive('/rankings') ? 'nav-link-active' : ''}`} onClick={() => setIsOpen(false)}>排行榜</Link>
+              <Link href="/feed" className={`block nav-link ${isActive('/feed') ? 'nav-link-active' : ''}`} onClick={() => setIsOpen(false)}>动态</Link>
+              {user && (user.role === 'companion' || user.role === 'admin') && (
+                <Link href="/companion/dashboard" className={`block nav-link ${isActive('/companion') ? 'nav-link-active' : ''}`} onClick={() => setIsOpen(false)}>陪玩工作台</Link>
+              )}
+              {user && (user.role === 'club_admin' || user.role === 'admin') && (
+                <Link href="/clubs/create" className={`block nav-link ${isActive('/clubs/create') ? 'nav-link-active' : ''}`} onClick={() => setIsOpen(false)}>俱乐部管理</Link>
+              )}
               {user ? (
                 user.role === 'admin' ? (
                   <>

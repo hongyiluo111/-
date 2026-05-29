@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef, useCallback } from 'react';
-import Pusher from 'pusher-js';
+import { getPusher, releasePusher } from '@/lib/pusher';
 import { useUserStore } from '@/store/user';
 import { useToast } from '@/components/Toast';
 import MessageBubble from './MessageBubble';
@@ -31,28 +31,6 @@ interface ChatWindowProps {
   onNewMessage?: () => void;
 }
 
-let globalPusher: Pusher | null = null;
-let globalPusherRefCount = 0;
-
-function getPusherInstance(key: string, cluster: string): Pusher {
-  if (!globalPusher) {
-    globalPusher = new Pusher(key, { cluster });
-  }
-  globalPusherRefCount++;
-  return globalPusher;
-}
-
-function releasePusherInstance() {
-  globalPusherRefCount--;
-  if (globalPusherRefCount <= 0) {
-    globalPusherRefCount = 0;
-    if (globalPusher) {
-      globalPusher.disconnect();
-      globalPusher = null;
-    }
-  }
-}
-
 export default function ChatWindow({ partnerId, partnerName, onBack, onNewMessage }: ChatWindowProps) {
   const { user } = useUserStore();
   const { showToast } = useToast();
@@ -62,6 +40,7 @@ export default function ChatWindow({ partnerId, partnerName, onBack, onNewMessag
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [showScrollBtn, setShowScrollBtn] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -135,13 +114,11 @@ export default function ChatWindow({ partnerId, partnerName, onBack, onNewMessag
   }, [partnerId, messages.length]);
 
   useEffect(() => {
-    const key = process.env.NEXT_PUBLIC_PUSHER_KEY;
-    const cluster = process.env.NEXT_PUBLIC_PUSHER_CLUSTER;
-    if (!key || !cluster || !user) return;
+    if (!user) return;
 
-    let pusher: Pusher;
+    let pusher: ReturnType<typeof getPusher>;
     try {
-      pusher = getPusherInstance(key, cluster);
+      pusher = getPusher();
     } catch { return; }
 
     const channelName = `chat-${[user.id, partnerId].sort().join('-')}`;
@@ -174,7 +151,7 @@ export default function ChatWindow({ partnerId, partnerName, onBack, onNewMessag
     return () => {
       channel.unbind_all();
       pusher.unsubscribe(channelName);
-      releasePusherInstance();
+      releasePusher();
       if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
     };
   }, [user, partnerId, onNewMessage]);
@@ -236,6 +213,31 @@ export default function ChatWindow({ partnerId, partnerName, onBack, onNewMessag
     }
   };
 
+  const handleScroll = useCallback(() => {
+    const container = chatContainerRef.current;
+    if (!container) return;
+    const distFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
+    setShowScrollBtn(distFromBottom > 200);
+  }, []);
+
+  const getDateLabel = (ts: number) => {
+    const d = new Date(ts);
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const yesterday = new Date(today.getTime() - 86400000);
+    const msgDate = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    if (msgDate.getTime() === today.getTime()) return '今天';
+    if (msgDate.getTime() === yesterday.getTime()) return '昨天';
+    return `${d.getMonth() + 1}月${d.getDate()}日`;
+  };
+
+  const shouldShowDate = (msg: MessageData, prevMsg: MessageData | undefined) => {
+    if (!prevMsg) return true;
+    const d1 = new Date(msg.timestamp);
+    const d2 = new Date(prevMsg.timestamp);
+    return d1.getFullYear() !== d2.getFullYear() || d1.getMonth() !== d2.getMonth() || d1.getDate() !== d2.getDate();
+  };
+
   return (
     <div className="flex flex-col h-full">
       <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-100 dark:border-gray-700 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm">
@@ -254,7 +256,7 @@ export default function ChatWindow({ partnerId, partnerName, onBack, onNewMessag
         </div>
       </div>
 
-      <div ref={chatContainerRef} className="flex-1 overflow-y-auto px-4 py-3">
+      <div ref={chatContainerRef} onScroll={handleScroll} className="flex-1 overflow-y-auto px-4 py-3 relative">
         {loading ? (
           <div className="flex justify-center py-12">
             <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
@@ -273,19 +275,38 @@ export default function ChatWindow({ partnerId, partnerName, onBack, onNewMessag
                 开始和 {partnerName} 聊天吧
               </div>
             )}
-            {messages.map((msg) => (
-              <MessageBubble
-                key={msg.id}
-                message={msg}
-                isOwn={msg.senderId === user?.id}
-                onRevoke={handleRevoke}
-                onImageClick={(url) => setPreviewUrl(url)}
-              />
+            {messages.map((msg, idx) => (
+              <div key={msg.id}>
+                {shouldShowDate(msg, messages[idx - 1]) && (
+                  <div className="flex items-center justify-center my-3">
+                    <span className="text-[11px] text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-700/50 px-3 py-0.5 rounded-full">
+                      {getDateLabel(msg.timestamp)}
+                    </span>
+                  </div>
+                )}
+                <MessageBubble
+                  message={msg}
+                  isOwn={msg.senderId === user?.id}
+                  onRevoke={handleRevoke}
+                  onImageClick={(url) => setPreviewUrl(url)}
+                />
+              </div>
             ))}
             {typing && <TypingIndicator userName={partnerName} />}
           </>
         )}
         <div ref={chatEndRef} />
+
+        {showScrollBtn && (
+          <button
+            onClick={() => scrollToBottom(true)}
+            className="absolute bottom-4 right-4 h-10 w-10 rounded-full bg-white dark:bg-gray-700 shadow-lg border border-gray-200 dark:border-gray-600 flex items-center justify-center text-gray-500 hover:text-primary transition-colors z-10"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+            </svg>
+          </button>
+        )}
       </div>
 
       <ChatInput

@@ -13,9 +13,14 @@ export async function GET(request: NextRequest) {
     const lastCheck = request.nextUrl.searchParams.get('after');
     const where: Record<string, unknown> = {
       receiverId: decoded.userId,
+      read: false,
+      revoked: false,
     };
     if (lastCheck) {
-      where.createdAt = { gt: new Date(lastCheck) };
+      const afterDate = new Date(Number(lastCheck));
+      if (!isNaN(afterDate.getTime())) {
+        where.createdAt = { gt: afterDate };
+      }
     }
 
     const count = await prisma.chatMessage.count({ where });

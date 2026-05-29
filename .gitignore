@@ -40,3 +40,39 @@ next-env.d.ts
 .claude/
 .qoder/
 tools/
+
+# user uploads
+public/uploads/
+
+# test/debug files
+__pycache__/
+*.pyc
+test_screenshots/
+deep_test_screenshots/
+dogfood-output/
+*-report.json
+*-report.txt
+test-config.json
+deep_check.py
+deep_check_report.json
+deep_test.py
+deep_test_report.json
+test_*.py
+test_*.js
+debug_*.py
+debug_*.js
+check-users.js
+homepage_debug.png
+login_debug.png
+query.sql
+create-normal-user.py
+setup.bat
+
+# playwright
+.playwright-browsers/
+
+# trae
+.trae/
+
+# misc temp files
+-/
