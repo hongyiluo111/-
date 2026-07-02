@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { verifyToken } from '@/lib/jwt';
@@ -54,9 +56,9 @@ export async function POST(request: NextRequest) {
     });
 
     try {
-      const { pusherServer } = await import('@/lib/pusher-server');
+      const { getPusherServer } = await import('@/lib/pusher-server');
       const channelName = `chat-${[message.senderId, message.receiverId].sort().join('-')}`;
-      await pusherServer.trigger(channelName, 'message-revoked', { messageId });
+      await getPusherServer().trigger(channelName, 'message-revoked', { messageId });
     } catch {
       console.error('Pusher 撤回通知失败');
     }

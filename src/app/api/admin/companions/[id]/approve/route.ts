@@ -1,6 +1,9 @@
+export const dynamic = 'force-dynamic';
+
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { requireAdmin } from '@/lib/auth';
+import { invalidateCompanionListCache } from '@/lib/companion-cache';
 
 interface RouteContext {
   params: Promise<{
@@ -44,6 +47,9 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
         },
       }),
     ]);
+
+    // 陪玩审核通过变为 active，立即失效列表缓存
+    invalidateCompanionListCache();
 
     return NextResponse.json({
       companion: {

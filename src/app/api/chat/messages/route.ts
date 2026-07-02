@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { verifyToken } from '@/lib/jwt';
@@ -80,8 +82,36 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '登录已过期' }, { status: 401 });
     }
 
-    if (!receiverId || !content) {
-      return NextResponse.json({ error: '缺少必要参数' }, { status: 400 });
+    if (!receiverId) {
+      return NextResponse.json({ error: '缺少 receiverId' }, { status: 400 });
+    }
+
+    // 不允许给自己发消息
+    if (receiverId === decoded.userId) {
+      return NextResponse.json({ error: '不能给自己发消息' }, { status: 400 });
+    }
+
+    // 按消息类型差异化校验必填字段
+    // - text: 必填 content
+    // - image/file/voice: 必填 fileUrl（content 可空）
+    const validTypes = ['text', 'image', 'file', 'voice'];
+    if (!validTypes.includes(type)) {
+      return NextResponse.json({ error: '无效的消息类型' }, { status: 400 });
+    }
+    if (type === 'text' && !content) {
+      return NextResponse.json({ error: '文本消息不能为空' }, { status: 400 });
+    }
+    if (type !== 'text' && !fileUrl) {
+      return NextResponse.json({ error: `${type} 类型消息必须提供 fileUrl` }, { status: 400 });
+    }
+
+    // 校验接收方存在且未软删除
+    const receiver = await prisma.user.findFirst({
+      where: { id: receiverId, deletedAt: null },
+      select: { id: true, status: true },
+    });
+    if (!receiver) {
+      return NextResponse.json({ error: '接收方不存在' }, { status: 404 });
     }
 
     const { allowed, retryAfter } = rateLimit(`chat-send:${decoded.userId}`, 30, 60000);
@@ -89,16 +119,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: `发送太频繁，请在 ${retryAfter} 秒后重试` }, { status: 429 });
     }
 
-    const validTypes = ['text', 'image', 'file', 'voice'];
-    if (!validTypes.includes(type)) {
-      return NextResponse.json({ error: '无效的消息类型' }, { status: 400 });
-    }
-
     const message = await prisma.chatMessage.create({
       data: {
         senderId: decoded.userId,
         receiverId,
-        content,
+        content: content || null,
         type,
         ...(fileUrl ? { fileUrl } : {}),
         ...(fileName ? { fileName } : {}),
@@ -123,9 +148,9 @@ export async function POST(request: NextRequest) {
     };
 
     try {
-      const { pusherServer } = await import('@/lib/pusher-server');
+      const { getPusherServer } = await import('@/lib/pusher-server');
       const channelName = `chat-${[decoded.userId, receiverId].sort().join('-')}`;
-      await pusherServer.trigger(channelName, 'new-message', messageData);
+      await getPusherServer().trigger(channelName, 'new-message', messageData);
     } catch {
       console.error('Pusher 推送失败，消息已保存');
     }

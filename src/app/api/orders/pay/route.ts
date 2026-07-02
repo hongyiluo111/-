@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { verifyToken } from '@/lib/jwt';
@@ -43,22 +45,42 @@ export async function POST(request: NextRequest) {
     const orderPrice = Number(order.price);
 
     if (user.diamonds < orderPrice) {
-      return NextResponse.json({ error: '钻石不足，请先充值', status: 400 }, { status: 400 });
+      return NextResponse.json({ error: '钻石不足，请先充值' }, { status: 400 });
     }
 
-    await prisma.$transaction([
-      prisma.user.update({
-        where: { id: user.id },
-        data: { diamonds: { decrement: orderPrice } },
-      }),
-      prisma.order.update({
-        where: { id: order.id },
+    // 使用带条件的原子更新防止 TOCTOU 竞态：只有 diamonds >= orderPrice 时才扣减
+    const paymentId = `diamonds-${order.id}-${Date.now()}`;
+    const updateResult = await prisma.user.updateMany({
+      where: { id: user.id, diamonds: { gte: orderPrice } },
+      data: { diamonds: { decrement: orderPrice } },
+    });
+
+    if (updateResult.count === 0) {
+      // 余额在并发请求中被消耗
+      return NextResponse.json({ error: '钻石不足，请先充值' }, { status: 400 });
+    }
+
+    // 余额扣减成功，更新订单状态（带状态前置条件防重复支付）
+    try {
+      await prisma.order.update({
+        where: { id: order.id, paymentStatus: 'unpaid' },
         data: {
           paymentStatus: 'paid',
           paymentMethod: 'diamonds',
+          paymentId,
         },
-      }),
-    ]);
+      });
+    } catch (err) {
+      // 订单已被其他并发请求支付，回滚钻石
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { diamonds: { increment: orderPrice } },
+      });
+      if (err && typeof err === 'object' && 'code' in err && err.code === 'P2025') {
+        return NextResponse.json({ error: '订单已支付，请勿重复操作' }, { status: 409 });
+      }
+      throw err;
+    }
 
     return NextResponse.json({
       success: true,

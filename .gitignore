@@ -76,3 +76,22 @@ setup.bat
 
 # misc temp files
 -/
+
+# build logs / output
+build-log.txt
+build-output.txt
+--output
+
+# local data snapshots
+accounts/
+db/
+
+# playwright test results
+test-results.json
+test-results/
+tests/reports/
+tests/screenshots/
+tests/blackbox/report.json
+
+# personal docs (含个人信息, 不入库)
+*.docx

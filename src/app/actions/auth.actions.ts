@@ -5,16 +5,30 @@ import bcrypt from 'bcrypt';
 import { revalidatePath } from 'next/cache';
 import { generateToken, setAuthCookie, getAuthCookie, verifyToken, clearAuthCookie } from '@/lib/jwt';
 
-export async function registerUser(name: string, email: string, password: string) {
-  const rememberMe = false;
+export async function registerUser(name: string, email: string, password: string, rememberMe: boolean = false) {
   try {
-    // 检查邮箱是否已存在
+    // 密码强度校验（与 profile/password 路由一致）
+    if (!password || password.length < 6) {
+      throw new Error('密码长度至少 6 位');
+    }
+    // 邮箱格式校验
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      throw new Error('邮箱格式不正确');
+    }
+
+    // 检查邮箱是否已被"未软删除"的用户占用
+    // 注：email 是全局 unique，被软删除的邮箱需通过应用层处理（恢复或改邮箱）
     const existingUser = await prisma.user.findUnique({
-      where: { email }
+      where: { email },
+      select: { id: true, deletedAt: true },
     });
 
-    if (existingUser) {
+    if (existingUser && !existingUser.deletedAt) {
       throw new Error('该邮箱已被注册');
+    }
+    if (existingUser && existingUser.deletedAt) {
+      throw new Error('该邮箱曾注册但已注销，请联系管理员恢复或使用其他邮箱');
     }
 
     // 加密密码
@@ -53,9 +67,9 @@ export async function registerUser(name: string, email: string, password: string
 
 export async function loginUser(email: string, password: string, rememberMe: boolean = false) {
   try {
-    // 查找用户
-    const user = await prisma.user.findUnique({
-      where: { email },
+    // 查找用户（用 findFirst 以支持 deletedAt 过滤，因为 email 是全局 unique 但我们想排除软删用户）
+    const user = await prisma.user.findFirst({
+      where: { email, deletedAt: null },
       select: {
         id: true,
         email: true,
@@ -66,19 +80,20 @@ export async function loginUser(email: string, password: string, rememberMe: boo
       }
     });
 
+    // 统一文案防止邮箱枚举（不区分"用户不存在"和"密码错误"）
     if (!user) {
-      throw new Error('用户不存在');
+      throw new Error('邮箱或密码错误');
     }
 
     // 验证密码
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
-      throw new Error('密码错误');
+      throw new Error('邮箱或密码错误');
     }
 
     // 检查用户状态
     if (user.status !== 'active') {
-      throw new Error('账号已被封禁');
+      throw new Error('账号已被封禁，请联系管理员');
     }
 
     // 生成token并设置cookie
@@ -129,10 +144,12 @@ export async function getCurrentUser() {
         status: true,
         createdAt: true,
         updatedAt: true,
+        deletedAt: true,
       }
     });
 
-    if (!user || user.status !== 'active') {
+    // 过滤软删除用户和封禁用户
+    if (!user || user.deletedAt || user.status !== 'active') {
       await clearAuthCookie();
       return null;
     }

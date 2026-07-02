@@ -20,13 +20,23 @@ export function generateToken(userId: string, email: string, role: string, remem
   return jwt.sign(
     { userId, email, role },
     getSecret(),
-    { expiresIn: rememberMe ? '30d' : '7d' }
+    { algorithm: 'HS256', expiresIn: rememberMe ? '30d' : '7d' }
   );
 }
 
 export function verifyToken(token: string) {
   try {
-    return jwt.verify(token, getSecret()) as { userId: string; email: string; role: string };
+    // 显式指定允许的算法，防止算法混淆攻击（如 alg=none 或 RS256 伪造）
+    const decoded = jwt.verify(token, getSecret(), { algorithms: ['HS256'] }) as {
+      userId: string;
+      email: string;
+      role: string;
+    };
+    // 运行时校验 payload 结构
+    if (!decoded || typeof decoded.userId !== 'string' || typeof decoded.email !== 'string') {
+      return null;
+    }
+    return decoded;
   } catch {
     return null;
   }

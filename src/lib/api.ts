@@ -22,5 +22,14 @@ export async function api<T>(path: string, options?: RequestInit): Promise<T> {
     throw new ApiError(res.status, data);
   }
 
-  return res.json();
+  // 处理空响应体：204 No Content、无 content-type、或空文本
+  if (res.status === 204) {
+    return undefined as T;
+  }
+  const contentType = res.headers.get('content-type') || '';
+  if (!contentType.includes('application/json')) {
+    return undefined as T;
+  }
+  const text = await res.text();
+  return (text ? JSON.parse(text) : undefined) as T;
 }

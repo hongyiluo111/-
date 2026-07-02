@@ -1,6 +1,9 @@
+export const dynamic = 'force-dynamic';
+
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { getUserIdFromRequest } from '@/lib/auth';
+import { invalidateCompanionListCache } from '@/lib/companion-cache';
 
 export async function GET(request: NextRequest) {
   try {
@@ -79,6 +82,9 @@ export async function PATCH(request: NextRequest) {
       where: { id: companion.id },
       data: updateData,
     });
+
+    // 陪玩资料变更，失效列表缓存
+    invalidateCompanionListCache();
 
     return NextResponse.json({
       companion: {

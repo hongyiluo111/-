@@ -45,7 +45,8 @@ export default function ChatWindow({ partnerId, partnerName, onBack, onNewMessag
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const markedRef = useRef<{ partnerId: string; messageCount: number } | null>(null);
-  const prevMessageCountRef = useRef(0);
+  const isNearBottomRef = useRef(true);
+  const loadMoreRef = useRef(false);
 
   const scrollToBottom = useCallback((smooth = true) => {
     chatEndRef.current?.scrollIntoView({ behavior: smooth ? 'smooth' : 'instant' });
@@ -83,20 +84,23 @@ export default function ChatWindow({ partnerId, partnerName, onBack, onNewMessag
     setLoading(true);
     setMessages([]);
     markedRef.current = null;
-    prevMessageCountRef.current = 0;
+    isNearBottomRef.current = true;
+    loadMoreRef.current = false;
     loadMessages();
   }, [partnerId, loadMessages]);
 
   useEffect(() => {
     if (loading) return;
-    const prevCount = prevMessageCountRef.current;
-    const currentCount = messages.length;
-    const isLoadMore = currentCount > prevCount + 1;
-    prevMessageCountRef.current = currentCount;
-    if (!isLoadMore) {
-      scrollToBottom(currentCount > 0);
+    // 加载更多由 loadMessages 内部保持滚动位置，此处跳过
+    if (loadMoreRef.current) {
+      loadMoreRef.current = false;
+      return;
     }
-  }, [messages, scrollToBottom, loading]);
+    // 只有用户在底部附近时才自动滚动，避免打断阅读历史
+    if (isNearBottomRef.current) {
+      scrollToBottom(messages.length > 1);
+    }
+  }, [messages, loading, scrollToBottom]);
 
   useEffect(() => {
     if (messages.length > 0) {
@@ -209,6 +213,7 @@ export default function ChatWindow({ partnerId, partnerName, onBack, onNewMessag
   const handleLoadMore = () => {
     if (hasMore && !loadingMore && messages.length > 0) {
       setLoadingMore(true);
+      loadMoreRef.current = true;
       loadMessages(messages[0].id);
     }
   };
@@ -218,6 +223,7 @@ export default function ChatWindow({ partnerId, partnerName, onBack, onNewMessag
     if (!container) return;
     const distFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
     setShowScrollBtn(distFromBottom > 200);
+    isNearBottomRef.current = distFromBottom < 100;
   }, []);
 
   const getDateLabel = (ts: number) => {

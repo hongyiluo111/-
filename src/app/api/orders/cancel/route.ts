@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { verifyToken } from '@/lib/jwt';
@@ -35,6 +37,7 @@ export async function POST(request: NextRequest) {
 
     const order = await prisma.order.findFirst({
       where: { id: orderId, userId: user.id },
+      select: { id: true, status: true, paymentStatus: true, paymentMethod: true, price: true, userId: true },
     });
 
     if (!order) {
@@ -51,17 +54,43 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const updatedOrder = await prisma.order.update({
-      where: { id: orderId },
-      data: { status: 'cancelled' },
-    });
+    // 已支付订单需退款
+    const needRefund = order.paymentStatus === 'paid';
+    const isDiamonds = order.paymentMethod === 'diamonds';
+
+    // 使用事务保证状态与退款原子性
+    const refundPrice = order.price;
+    const [updatedOrder] = await prisma.$transaction([
+      prisma.order.update({
+        where: { id: orderId, status: { in: ['pending', 'accepted', 'in_progress'] } },
+        data: {
+          status: 'cancelled',
+          paymentStatus: needRefund ? 'refunded' : order.paymentStatus,
+        },
+      }),
+      // 钻石支付：立即退还钻石到用户余额
+      ...(needRefund && isDiamonds
+        ? [prisma.user.update({
+            where: { id: order.userId },
+            data: { diamonds: { increment: Number(refundPrice) } },
+          })]
+        : []),
+      // 外部支付（alipay/wechat）：标记为 refunded，实际退款需通过退款 API 单独处理
+    ]);
+
+    if (needRefund && !isDiamonds) {
+      console.warn('订单需通过外部支付通道退款:', { orderId, method: order.paymentMethod, amount: refundPrice });
+    }
 
     return NextResponse.json({
       success: true,
       order: {
         id: updatedOrder.id,
         status: updatedOrder.status,
+        paymentStatus: updatedOrder.paymentStatus,
       },
+      refunded: needRefund,
+      refundAmount: needRefund ? Number(refundPrice) : 0,
     });
   } catch (error) {
     console.error('取消订单失败:', error);

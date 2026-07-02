@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserIdFromRequest } from '@/lib/auth';
 import { prisma } from '@/lib/db';
@@ -24,6 +26,7 @@ export async function POST(
 
     const order = await prisma.order.findFirst({
       where: { id, companionId: companion.id },
+      select: { id: true, status: true, paymentStatus: true },
     });
 
     if (!order) {
@@ -32,6 +35,11 @@ export async function POST(
 
     if (order.status !== 'pending') {
       return NextResponse.json({ error: '订单状态不正确，无法接单' }, { status: 400 });
+    }
+
+    // 校验支付状态：未支付订单不可接单
+    if (order.paymentStatus !== 'paid') {
+      return NextResponse.json({ error: '订单尚未支付，无法接单' }, { status: 400 });
     }
 
     const updatedOrder = await prisma.order.update({

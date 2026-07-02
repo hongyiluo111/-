@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import crypto from 'crypto';
@@ -57,14 +59,23 @@ export async function POST(request: NextRequest) {
     if (params.result_code === 'SUCCESS') {
       const orderNo = params.out_trade_no;
       if (orderNo) {
-        const order = await prisma.order.findFirst({
+        const recharge = await prisma.rechargeOrder.findUnique({
           where: { paymentId: orderNo },
-          select: { id: true, price: true },
+          select: { id: true, userId: true, amount: true, diamonds: true, status: true },
         });
 
-        if (order) {
+        if (recharge) {
+          // 幂等：已支付直接返回 success
+          if (recharge.status === 'paid') {
+            return new NextResponse(
+              '<xml><return_code><![CDATA[SUCCESS]]></return_code><return_msg><![CDATA[OK]]></return_msg></xml>',
+              { headers: { 'Content-Type': 'application/xml' } }
+            );
+          }
+
+          // 验证金额（微信金额单位为分）
           const totalFee = Number(params.total_fee);
-          const expectedFee = Math.round(Number(order.price) * 100);
+          const expectedFee = Math.round(Number(recharge.amount) * 100);
           if (totalFee !== expectedFee) {
             console.error('微信支付回调金额不匹配:', { expected: expectedFee, actual: totalFee });
             return new NextResponse(
@@ -73,13 +84,24 @@ export async function POST(request: NextRequest) {
             );
           }
 
-          await prisma.order.update({
-            where: { id: order.id },
-            data: {
-              paymentStatus: 'paid',
-              paymentMethod: 'wechat',
-            },
-          });
+          // 事务：更新充值订单状态 + 发放钻石
+          await prisma.$transaction([
+            prisma.rechargeOrder.update({
+              where: { id: recharge.id },
+              data: {
+                status: 'paid',
+                paidAt: new Date(),
+              },
+            }),
+            prisma.user.update({
+              where: { id: recharge.userId },
+              data: {
+                diamonds: { increment: recharge.diamonds },
+              },
+            }),
+          ]);
+
+          console.log('微信充值成功，已发放钻石:', { userId: recharge.userId, diamonds: recharge.diamonds });
         }
       }
     }

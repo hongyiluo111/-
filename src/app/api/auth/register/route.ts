@@ -1,15 +1,13 @@
+export const dynamic = 'force-dynamic';
+
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
+import { generateToken, setAuthCookie } from '@/lib/jwt';
 
-function getSecret(): string {
-  const secret = process.env.JWT_SECRET;
-  if (!secret) {
-    throw new Error('JWT_SECRET is not set');
-  }
-  return secret;
-}
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const MIN_PASSWORD_LENGTH = 6;
+const MAX_NAME_LENGTH = 32;
 
 export async function POST(request: NextRequest) {
   try {
@@ -20,9 +18,31 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: '姓名、邮箱和密码不能为空' }, { status: 400 });
     }
 
-    const existingUser = await prisma.user.findUnique({ where: { email } });
-    if (existingUser) {
+    // 邮箱格式校验
+    if (!EMAIL_REGEX.test(email)) {
+      return NextResponse.json({ success: false, error: '邮箱格式不正确' }, { status: 400 });
+    }
+
+    // 密码强度校验（与 reset-password / profile/password 保持一致）
+    if (password.length < MIN_PASSWORD_LENGTH) {
+      return NextResponse.json({ success: false, error: `密码长度至少 ${MIN_PASSWORD_LENGTH} 位` }, { status: 400 });
+    }
+
+    // 用户名长度校验
+    if (typeof name !== 'string' || name.length > MAX_NAME_LENGTH) {
+      return NextResponse.json({ success: false, error: `姓名长度不能超过 ${MAX_NAME_LENGTH} 个字符` }, { status: 400 });
+    }
+
+    // 检查邮箱是否已被未软删除的用户占用
+    const existingUser = await prisma.user.findUnique({
+      where: { email },
+      select: { id: true, deletedAt: true },
+    });
+    if (existingUser && !existingUser.deletedAt) {
       return NextResponse.json({ success: false, error: '该邮箱已被注册' }, { status: 409 });
+    }
+    if (existingUser && existingUser.deletedAt) {
+      return NextResponse.json({ success: false, error: '该邮箱曾注册但已注销，请联系管理员或使用其他邮箱' }, { status: 409 });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -31,19 +51,10 @@ export async function POST(request: NextRequest) {
       select: { id: true, email: true, name: true, role: true }
     });
 
-    const token = jwt.sign(
-      { userId: user.id, email: user.email, role: user.role },
-      getSecret(),
-      { expiresIn: '7d' }
-    );
-
+    // 复用统一的 token 生成逻辑（含密钥长度校验）
+    const token = generateToken(user.id, user.email, user.role, false);
     const response = NextResponse.json({ success: true, user });
-    response.cookies.set('token', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      maxAge: 7 * 24 * 60 * 60,
-      path: '/',
-    });
+    await setAuthCookie(token, false);
 
     return response;
   } catch (error) {

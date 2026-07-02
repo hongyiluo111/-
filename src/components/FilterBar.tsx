@@ -53,6 +53,7 @@ export default function FilterBar({ onFilterChange, initialGame }: FilterBarProp
     router.push(`${pathname}?${params.toString()}`, { scroll: false });
   }, [searchParams, router, pathname]);
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const emitFilters = useCallback((overrides: Partial<{ game: string; rank: string; priceRange: string; search: string; sort: string }> = {}) => {
     const filters = {
       game: overrides.game ?? game,

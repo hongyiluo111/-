@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { verifyToken } from '@/lib/jwt';
@@ -31,9 +33,9 @@ export async function POST(request: NextRequest) {
 
     if (result.count > 0) {
       try {
-        const { pusherServer } = await import('@/lib/pusher-server');
+        const { getPusherServer } = await import('@/lib/pusher-server');
         const channelName = `chat-${[decoded.userId, partnerId].sort().join('-')}`;
-        await pusherServer.trigger(channelName, 'messages-read', { readerId: decoded.userId });
+        await getPusherServer().trigger(channelName, 'messages-read', { readerId: decoded.userId });
       } catch {
         console.error('Pusher 已读通知失败');
       }

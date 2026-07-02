@@ -36,7 +36,10 @@ export function requireAdmin(request: NextRequest) {
   }
 
   const user = verifyToken(token);
-  if (!user || user.role !== 'admin') {
+  if (!user) {
+    return { error: NextResponse.json({ error: '登录已过期' }, { status: 401 }) };
+  }
+  if (user.role !== 'admin') {
     return { error: NextResponse.json({ error: '无权限' }, { status: 403 }) };
   }
 

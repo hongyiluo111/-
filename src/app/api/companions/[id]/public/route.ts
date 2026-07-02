@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 
@@ -53,7 +55,6 @@ export async function GET(
         description: companion.description,
         avatar: companion.avatar,
         totalOrders: companion.totalOrders,
-        totalEarnings: Number(companion.totalEarnings),
         rating: companion.rating,
         ratingCount: companion.ratingCount,
         isOnline: companion.isOnline,

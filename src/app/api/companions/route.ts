@@ -1,18 +1,18 @@
+export const dynamic = 'force-dynamic';
+
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-
-const CACHE_TTL = 30000; // 30 秒缓存
-let cache: { data: unknown; timestamp: number } | null = null;
+import { getCompanionListCache, setCompanionListCache } from '@/lib/companion-cache';
 
 export async function GET() {
   try {
-    const now = Date.now();
-    if (cache && now - cache.timestamp < CACHE_TTL) {
-      return NextResponse.json(cache.data);
+    const cached = getCompanionListCache();
+    if (cached) {
+      return NextResponse.json(cached.data);
     }
 
     const companions = await prisma.companion.findMany({
-      where: { status: 'active' },
+      where: { status: 'active', deletedAt: null },
       include: {
         user: { select: { id: true, name: true } },
       },
@@ -36,7 +36,7 @@ export async function GET() {
       })),
     };
 
-    cache = { data, timestamp: now };
+    setCompanionListCache(data);
     return NextResponse.json(data);
   } catch {
     return NextResponse.json({ companions: [] });

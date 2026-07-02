@@ -4,7 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import TiltCard from './TiltCard';
-import CountUp from './CountUp';
+// import CountUp from './CountUp';
 import { useInView } from '@/hooks/useInView';
 import { gameIcons } from './GameIcons';
 

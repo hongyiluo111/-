@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/jwt';
 import { rateLimit } from '@/lib/rate-limit';
@@ -15,9 +17,9 @@ export async function POST(request: NextRequest) {
     if (!allowed) return NextResponse.json({ success: true });
 
     try {
-      const { pusherServer } = await import('@/lib/pusher-server');
+      const { getPusherServer } = await import('@/lib/pusher-server');
       const channelName = `chat-${[decoded.userId, receiverId].sort().join('-')}`;
-      await pusherServer.trigger(channelName, 'typing', { userId: decoded.userId });
+      await getPusherServer().trigger(channelName, 'typing', { userId: decoded.userId });
     } catch {
       console.error('Pusher typing 推送失败');
     }

@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { prisma } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserIdFromRequest } from '@/lib/auth';
@@ -34,14 +36,25 @@ export async function POST(
       return NextResponse.json({ error: '不是俱乐部成员' }, { status: 404 });
     }
 
-    await prisma.clubMember.delete({
-      where: { id: member.id },
-    });
-
-    await prisma.club.update({
-      where: { id },
-      data: { memberCount: { decrement: 1 } },
-    });
+    // 事务保证成员删除与计数递减原子性；memberCount > 0 前置条件防止并发退出减成负数
+    try {
+      await prisma.$transaction(async (tx) => {
+        await tx.clubMember.delete({ where: { id: member.id } });
+        await tx.club.update({
+          where: { id, memberCount: { gt: 0 } },
+          data: { memberCount: { decrement: 1 } },
+        });
+      });
+    } catch (error: unknown) {
+      // P2025: 前置条件不满足（memberCount 已为 0 或记录被并发修改）
+      if (error && typeof error === 'object' && 'code' in error && error.code === 'P2025') {
+        return NextResponse.json(
+          { error: '退出失败：俱乐部数据异常，请刷新后重试' },
+          { status: 409 }
+        );
+      }
+      throw error;
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {

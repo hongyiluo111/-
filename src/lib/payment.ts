@@ -1,4 +1,5 @@
 import Pay from 'wechatpay-node-v3';
+import { randomBytes } from 'crypto';
 
 type AlipayClient = {
   exec: (
@@ -79,7 +80,8 @@ if (wechatConfig.privateKey) {
 }
 
 function generateOrderNo() {
-  return Date.now().toString() + Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+  // 时间戳(13位) + 16位十六进制随机串(2^64 空间)，高并发下碰撞概率可忽略
+  return Date.now().toString() + randomBytes(8).toString('hex');
 }
 
 type PaymentResult = { paymentUrl: string; paymentId: string };
@@ -123,7 +125,8 @@ async function createWechatOrder(amount: number, userId: string): Promise<Paymen
     };
   }
 
-  const totalAmount = amount * 100;
+  // 微信金额单位为分，使用 Math.round 避免浮点精度问题（如 19.99 * 100 = 1999.0000000000002）
+  const totalAmount = Math.round(amount * 100);
 
   const result = await wechatPay.transactions_jsapi({
     description: `电竞陪玩平台充值-${amount}元`,
@@ -137,9 +140,14 @@ async function createWechatOrder(amount: number, userId: string): Promise<Paymen
     },
   });
 
+  const paymentUrl = result.pay_url || result.h5_url || result.code_url;
+  if (!paymentUrl) {
+    throw new Error('微信下单失败：未返回支付链接');
+  }
+
   return {
     paymentId: orderNo,
-    paymentUrl: result.pay_url || result.h5_url || result.code_url || `https://wx.tenpay.com/?amount=${amount}&uid=${userId}`,
+    paymentUrl,
   };
 }
 

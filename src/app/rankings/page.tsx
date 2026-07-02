@@ -1,5 +1,7 @@
 'use client';
 
+import { Suspense } from 'react';
+
 import { useEffect, useState } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
@@ -239,7 +241,8 @@ function RankingsSkeleton() {
   );
 }
 
-export default function RankingsPage() {
+function RankingsContent() {
+
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -680,5 +683,14 @@ export default function RankingsPage() {
         )}
       </div>
     </div>
+  );
+}
+
+
+export default function RankingsPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>}>
+      <RankingsContent />
+    </Suspense>
   );
 }

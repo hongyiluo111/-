@@ -42,6 +42,7 @@ model User {
   clubMembers ClubMember[]
   posts       Post[]
   postLikes   PostLike[]
+  rechargeOrders RechargeOrder[]
 
   // 索引
   @@index([lastSeen])
@@ -203,7 +204,7 @@ model PasswordReset {
 model Review {
   id          String   @id @default(cuid())
   orderId     String   @unique
-  userId      String
+  userId      String   @map("authorId")
   companionId String
   rating      Int
   content     String?  @db.Text
@@ -215,6 +216,7 @@ model Review {
   @@index([companionId])
   @@index([userId])
   @@index([createdAt])
+  @@map("review")
 }
 
 // 收入记录模型
@@ -245,6 +247,26 @@ model AdminLog {
 
   @@index([adminId])
   @@index([action])
+  @@index([createdAt])
+}
+
+// 充值订单模型
+model RechargeOrder {
+  id            String   @id @default(cuid())
+  userId        String
+  amount        Decimal  @db.Decimal(10, 2)
+  diamonds      Int
+  paymentId     String   @unique
+  paymentMethod String
+  status        String   @default("pending")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  paidAt        DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
   @@index([createdAt])
 }
 

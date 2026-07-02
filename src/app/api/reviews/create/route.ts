@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { getUserIdFromRequest } from '@/lib/auth';
@@ -35,7 +37,7 @@ export async function POST(request: NextRequest) {
     }
 
     const existingReview = await prisma.review.findFirst({
-      where: { orderId },
+      where: { orderId, userId },
       select: { id: true },
     });
 

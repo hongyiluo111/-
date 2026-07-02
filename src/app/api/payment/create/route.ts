@@ -1,9 +1,14 @@
+export const dynamic = 'force-dynamic';
+
 import { createAlipayOrder, createWechatOrder } from '@/lib/payment';
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/jwt';
+import { prisma } from '@/lib/db';
 
 const MIN_AMOUNT = 0.01;
 const MAX_AMOUNT = 10000;
+// 1 元 = 10 钻石
+const DIAMONDS_PER_YUAN = 10;
 
 export async function POST(request: NextRequest) {
   try {
@@ -38,6 +43,15 @@ export async function POST(request: NextRequest) {
 
     // 保留两位小数
     const normalizedAmount = Math.round(amount * 100) / 100;
+    const diamonds = Math.floor(normalizedAmount * DIAMONDS_PER_YUAN);
+
+    // 校验：充值金额必须能兑换至少 1 钻石（避免 0.01 元得 0 钻石）
+    if (diamonds < 1) {
+      return NextResponse.json(
+        { error: '充值金额过小，至少需要 0.1 元' },
+        { status: 400 }
+      );
+    }
 
     let result: { paymentUrl: string; paymentId: string };
 
@@ -48,6 +62,18 @@ export async function POST(request: NextRequest) {
     } else {
       return NextResponse.json({ error: 'Invalid payment method' }, { status: 400 });
     }
+
+    // 写入充值订单记录，确保回调能找到订单并发放钻石
+    await prisma.rechargeOrder.create({
+      data: {
+        userId,
+        amount: normalizedAmount,
+        diamonds,
+        paymentId: result.paymentId,
+        paymentMethod: method,
+        status: 'pending',
+      },
+    });
 
     return NextResponse.json({ paymentUrl: result.paymentUrl, paymentId: result.paymentId });
   } catch (error) {

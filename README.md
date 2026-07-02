@@ -1,179 +1,202 @@
-# 鸿一电竞陪玩平台
+# 电竞陪玩平台
 
-一个专业的电竞陪玩平台，连接游戏高手与玩家，提供高质量的陪玩服务。
+一个专业的电竞陪玩平台，连接游戏高手与玩家，提供高质量的陪玩服务。支持在线预约、实时聊天、支付下单、俱乐部社交等功能。
+
+---
 
 ## 技术栈
 
-### 前端
-- **Next.js 15** (App Router) — 全栈框架
-- **React 19** — UI 库
-- **TypeScript 5.4** — 类型安全
-- **Tailwind CSS 3.4** + **shadcn/ui** (Radix UI) — 样式与组件
-- **Zustand** — 全局状态管理
-- **TanStack React Query** — 服务端数据缓存
-- **Pusher JS** — 实时聊天 / 订单推送
-- **Lucide React** — 图标库
-
-### 后端
-- **Next.js API Routes** — RESTful API（支付回调、AI 聊天、用户信息等）
-- **Next.js Server Actions** — 表单提交与认证逻辑
-- **Prisma ORM + MySQL** (MariaDB 适配器) — 数据持久化
-- **JWT** (jsonwebtoken) — 无状态认证
-- **bcrypt** — 密码哈希
-
-### 支付
-- **微信支付** (wechatpay-node-v3)
-- **支付宝** (alipay-sdk)
-- 订单状态机防超发，`paymentId` 关联支付与订单
-
-### AI
-- **阿里云通义千问** (DashScope) — `qwen-turbo` 模型
-
-### 数据库
-- MySQL / MariaDB
-- 默认连接：`localhost:3306`，用户 `root`，数据库 `game`
-- Prisma Client 数据库推送（非迁移模式）：
-  ```bash
-  npx prisma db push && npx prisma generate
-  ```
+| 类别 | 技术 | 版本 |
+|------|------|------|
+| 运行时 | Node.js | v20+ (推荐 v20 LTS 或 v22+) |
+| 包管理 | npm | v10+ |
+| 前端框架 | Next.js (App Router) | 14.2.9 |
+| UI 框架 | React | 18.3.1 |
+| 类型系统 | TypeScript | 5.4.5 |
+| 样式方案 | Tailwind CSS + shadcn/ui (Radix UI) | 3.4.3 |
+| 状态管理 | Zustand | 4.5.7 |
+| 数据缓存 | TanStack React Query | 5.x |
+| ORM | Prisma (MariaDB 适配器) | 7.8.0 |
+| 数据库 | MySQL / MariaDB | 5.7+ / 10.5+ |
+| 认证 | JWT (jsonwebtoken) + bcrypt | 9.x / 6.x |
+| 实时通信 | Pusher | 5.x (服务端) / 8.x (客户端) |
+| 图标库 | Lucide React | 1.7.x |
+| 测试 | Playwright | 1.60.x |
 
 ---
 
 ## 快速开始
 
-### 1. 安装依赖
+### 1. 环境准备
+
+确保已安装以下软件：
+
+- **Node.js** v20 或更高版本（[下载](https://nodejs.org/)）
+- **MySQL** 5.7+ 或 **MariaDB** 10.5+
+- **npm** v10+（随 Node.js 附带）
+
+### 2. 创建数据库
+
+登录 MySQL/MariaDB，执行建表脚本：
+
+```bash
+mysql -u root -p < db/schema.sql
+```
+
+如需导入测试数据：
+
+```bash
+mysql -u root -p game < db/data.sql
+```
+
+### 3. 安装依赖
 
 ```bash
 npm install
 ```
 
-### 2. 配置环境变量
+### 4. 配置环境变量
 
-复制 `.env.local` 并填写：
-
-```env
-# 必填
-DATABASE_URL="mysql://root:你的密码@localhost:3306/game?charset=utf8mb4"
-JWT_SECRET="随机生成的64位十六进制字符串"
-QWEN_API_KEY="sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-NEXT_PUBLIC_BASE_URL="http://localhost:3000"
-
-# 可选 — 实时推送
-NEXT_PUBLIC_PUSHER_KEY="your-pusher-key"
-NEXT_PUBLIC_PUSHER_CLUSTER="your-pusher-cluster"
-
-# 可选 — 微信支付
-WECHAT_APPID=""
-WECHAT_MCHID=""
-WECHAT_PUBLIC_KEY=""
-WECHAT_PRIVATE_KEY=""
-
-# 可选 — 支付宝（沙箱环境）
-ALIPAY_APP_ID=""
-ALIPAY_PRIVATE_KEY=""
-ALIPAY_PUBLIC_KEY=""
-ALIPAY_GATEWAY="https://openapi-sandbox.dl.alipaydev.com/gateway.do"
-```
-
-> ⚠️ `JWT_SECRET` 和 `QWEN_API_KEY` 为必填项，未配置时服务将返回 503。
-
-### 3. 初始化数据库
+复制示例文件并填写：
 
 ```bash
-npx prisma db push && npx prisma generate
+cp .env.example .env.local
 ```
 
-### 4. 启动开发服务器
+编辑 `.env.local`，填写以下内容：
+
+```env
+# 数据库连接（修改密码为你自己的 MySQL 密码）
+DATABASE_URL="mysql://root:你的密码@localhost:3306/game?charset=utf8mb4"
+
+# JWT 密钥（至少 32 位随机字符串，用于用户认证令牌签发）
+JWT_SECRET="your-random-secret-key-at-least-32-chars-long"
+
+# AI 助手 API 密钥（阿里云通义千问 DashScope）
+QWEN_API_KEY="sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+
+# 应用地址
+NEXT_PUBLIC_BASE_URL="http://localhost:3000"
+```
+
+### 5. 同步数据库模型
+
+```bash
+npx prisma db push
+npx prisma generate
+```
+
+### 6. 启动开发服务器
 
 ```bash
 npm run dev
-# → http://localhost:3000
 ```
+
+访问 [http://localhost:3000](http://localhost:3000)
 
 ### 生产构建
 
 ```bash
-npm run build && npm start
+npm run build
+npm start
 ```
+
+---
+
+## AI API 密钥申请
+
+本项目使用**阿里云通义千问（DashScope）**的 `qwen-turbo` 模型提供 AI 聊天助手功能。
+
+**申请步骤：**
+
+1. 访问 [阿里云百炼平台](https://bailian.console.aliyun.com/)
+2. 注册/登录阿里云账号
+3. 开通 DashScope 服务
+4. 在「API-KEY 管理」中创建 API Key
+5. 将获取的 Key 填入 `.env.local` 的 `QWEN_API_KEY` 字段
+
+> 如不配置 AI 功能，平台其他功能仍可正常使用。
+
+---
+
+## 测试账号
+
+| 角色 | 邮箱 | 密码 |
+|------|------|------|
+| 管理员 | `admin@example.com` | `123456` |
+| 普通用户 | `test@example.com` | `123456` |
+| 陪玩师（王五） | `wangwu@example.com` | `123456` |
+| 陪玩师（赵六） | `zhaoliu@example.com` | `123456` |
+| 陪玩师（孙七） | `sunqi@example.com` | `123456` |
+
+- 管理员后台地址：`/admin`
+- 普通用户登录后可浏览陪玩、下单、聊天
+- 陪玩师登录后可进入「陪玩中心」管理订单和收入
 
 ---
 
 ## 项目结构
 
 ```
-src/
-├── app/                        # Next.js App Router
-│   ├── actions/                # Server Actions (auth, order, user)
-│   ├── api/                    # API Routes
-│   │   ├── admin/              # 后台管理接口
-│   │   ├── ai/chat/            # AI 聊天接口
-│   │   ├── auth/               # 认证接口
-│   │   ├── orders/             # 订单接口
-│   │   ├── payment/            # 支付（创建/回调/通知）
-│   │   └── profile/            # 用户资料
-│   ├── admin/                  # 后台页面
-│   │   ├── companions/         # 陪玩管理
-│   │   ├── orders/             # 订单管理
-│   │   ├── users/              # 用户管理
-│   │   └── settings/           # 系统设置
-│   ├── find-companion/         # 找陪玩
-│   ├── become-companion/       # 成为陪玩
-│   ├── login/ register/        # 登录/注册
-│   ├── orders/                 # 我的订单
-│   ├── profile/                # 个人中心
-│   └── layout.tsx              # 根布局
-├── components/
-│   ├── ui/                     # 基础 UI 组件
-│   ├── MagneticButton.tsx      # 磁性跟随按钮
-│   ├── TiltCard.tsx            # 3D 倾斜卡片
-│   ├── ChatModal.tsx           # 公共聊天弹窗
-│   ├── BookingModal.tsx        # 预约弹窗
-│   ├── CompanionList.tsx       # 陪玩列表（分页 + IntersectionObserver）
-│   ├── FeaturedCompanions.tsx  # 热门陪玩
-│   ├── FilterBar.tsx           # 筛选栏（游戏/段位/价格）
-│   ├── GameList.tsx            # 游戏网格
-│   ├── Navbar.tsx              # 导航栏（滚动时自动隐藏）
-│   ├── Hero.tsx                # 首页展示区
-│   ├── Footer.tsx              # 页脚
-│   ├── AIService.tsx           # 侧边 AI 助手
-│   └── Skeleton.tsx            # 骨架屏占位
-├── data/
-│   ├── companions.ts           # 陪玩种子数据
-│   ├── gameColors.ts           # 游戏主题色映射
-│   └── orderConstants.ts       # 订单状态常量
-├── hooks/
-│   ├── useReducedMotion.ts     # 系统减弱动画偏好检测
-│   └── useIsDesktop.ts         # 桌面端设备检测
-├── lib/
-│   ├── db.ts                   # Prisma 客户端单例
-│   ├── jwt.ts                  # JWT 签发与验证
-│   ├── payment.ts              # 支付 SDK 封装
-│   └── pusher.ts               # Pusher 服务端配置
-├── store/
-│   └── user.ts                 # Zustand 用户状态
-├── utils/
-│   ├── date.ts                 # formatDate
-│   └── order-state-machine.ts  # 订单状态流转约束
-└── prisma/
-    └── schema.prisma           # 数据模型定义
+电竞陪玩平台/
+├── db/                           # 数据库脚本
+│   ├── schema.sql                # 建表 SQL
+│   └── data.sql                  # 测试数据
+├── prisma/                       # Prisma ORM
+│   ├── schema.prisma             # 数据模型定义
+│   └── migrations/               # 迁移记录
+├── src/
+│   ├── app/                      # Next.js App Router 页面
+│   │   ├── actions/              # Server Actions (认证、订单、用户)
+│   │   ├── api/                  # API Routes
+│   │   │   ├── admin/            # 后台管理接口
+│   │   │   ├── ai/chat/          # AI 聊天接口
+│   │   │   ├── auth/             # 认证接口（登录/注册/找回密码）
+│   │   │   ├── chat/             # 聊天接口（消息/会话/已读）
+│   │   │   ├── clubs/            # 俱乐部接口
+│   │   │   ├── companion/        # 陪玩师后台接口
+│   │   │   ├── companions/       # 陪玩列表/申请接口
+│   │   │   ├── feed/             # 动态接口
+│   │   │   ├── friends/          # 好友接口
+│   │   │   ├── orders/           # 订单接口
+│   │   │   ├── payment/          # 支付接口（支付宝/微信）
+│   │   │   ├── profile/          # 个人资料接口
+│   │   │   ├── rankings/         # 排行榜接口
+│   │   │   ├── reviews/          # 评价接口
+│   │   │   └── user/             # 用户状态接口
+│   │   ├── admin/                # 后台管理页面
+│   │   ├── clubs/                # 俱乐部页面
+│   │   ├── companion/            # 陪玩中心页面
+│   │   ├── find-companion/       # 找陪玩页面
+│   │   ├── friends/              # 好友页面
+│   │   ├── messages/             # 消息页面
+│   │   ├── orders/               # 我的订单页面
+│   │   ├── profile/              # 个人中心页面
+│   │   ├── rankings/             # 排行榜页面
+│   │   └── (login/register/...)  # 登录/注册等页面
+│   ├── components/               # React 组件
+│   │   ├── ui/                   # 基础 UI 组件 (button/input/select)
+│   │   ├── chat/                 # 聊天组件
+│   │   ├── voice/                # 语音房间组件
+│   │   ├── Navbar.tsx            # 导航栏（滚动自动隐藏）
+│   │   ├── Hero.tsx              # 首页展示区
+│   │   ├── CompanionList.tsx     # 陪玩列表（分页 + IntersectionObserver）
+│   │   ├── BookingModal.tsx      # 预约弹窗
+│   │   ├── AIService.tsx         # AI 助手侧边栏
+│   │   └── ...                   # 其他业务组件
+│   ├── data/                     # 静态数据
+│   ├── hooks/                    # 自定义 Hooks
+│   ├── lib/                      # 工具库（db/jwt/payment/pusher）
+│   ├── store/                    # Zustand 状态管理
+│   ├── types/                    # TypeScript 类型定义
+│   └── utils/                    # 工具函数
+├── public/                       # 静态资源
+├── package.json                  # 项目依赖
+├── tsconfig.json                 # TypeScript 配置
+├── tailwind.config.js            # Tailwind CSS 配置
+├── next.config.js                # Next.js 配置
+└── .env.example                  # 环境变量示例
 ```
-
----
-
-## UI/UX 特性
-
-### 交互动画
-- **磁性按钮** (`MagneticButton`) — 鼠标靠近时按钮跟随光标偏移，按压时缩放到 97%
-- **3D 倾斜卡片** (`TiltCard`) — 鼠标悬停时卡片随光标轻倾斜，带光泽效果
-- 以上效果**仅桌面端**生效，通过 `pointer: fine` 媒体查询检测
-- 完整兼容 `prefers-reduced-motion: reduce`，开启后动画自动禁用
-
-### 其他交互
-- **滚动隐藏导航栏** — 向下滚动时导航栏自动收起，停止后重新显示
-- **IntersectionObserver 渐进显示** — 陪玩卡片进入视口时 opacity 渐入
-- **骨架屏** — 陪玩列表加载中自动展示骨架屏占位
-- **按钮 Ripple 波纹** — 全局按钮点击波纹反馈
-- **空状态与错误处理** — 所有列表/订单页均有空状态和错误提示
 
 ---
 
@@ -181,12 +204,46 @@ src/
 
 | 模型 | 说明 |
 |------|------|
-| **User** | 用户（id, email, password, name, role, status, diamonds） |
-| **Companion** | 陪玩（绑定 userId, game, rank, price, status） |
-| **Order** | 订单（userId, companionId, price, status, paymentId, paymentStatus） |
-| **Notification** | 通知（userId, type, title, message, read） |
-| **ChatMessage** | 聊天记录（senderId, receiverId, content, type） |
-| **Friend** | 好友关系 |
+| User | 用户（id, email, password, name, role, status, diamonds） |
+| Companion | 陪玩师（绑定 userId, game, rank, price, status） |
+| Order | 订单（userId, companionId, price, status, paymentId） |
+| Review | 评价（orderId, rating, content） |
+| Earning | 收入记录（companionId, orderId, amount） |
+| ChatMessage | 聊天消息（senderId, receiverId, content, type） |
+| Friend | 好友关系 |
+| Notification | 通知（userId, type, title, message） |
+| Club | 俱乐部（name, gameId, ownerId） |
+| ClubMember | 俱乐部成员 |
+| Post | 动态（userId, content, game） |
+| PostLike | 动态点赞 |
+| PasswordReset | 密码重置令牌 |
+| AdminLog | 管理员操作日志 |
+
+---
+
+## 核心功能
+
+### 用户端
+- 浏览陪玩列表，按游戏/段位/价格筛选
+- 在线下单预约陪玩，支持支付宝/微信支付
+- 与陪玩师实时聊天（文字/图片/语音）
+- 好友系统，添加/搜索好友
+- 动态发布与点赞
+- 排行榜查看热门陪玩和俱乐部
+- 俱乐部加入与管理
+- AI 智能助手（通义千问）
+
+### 陪玩师端
+- 申请成为陪玩师
+- 接单/拒单/开始/完成订单管理
+- 收入统计与提现
+- 个人主页与评价查看
+
+### 管理员端
+- 用户管理（查看/禁用）
+- 陪玩师审核（通过/拒绝）
+- 订单管理
+- 系统数据统计
 
 ---
 
@@ -195,41 +252,29 @@ src/
 ```
 PENDING ──→ ACCEPTED ──→ IN_PROGRESS ──→ COMPLETED
    │            │
-   └── CANCELLED ←────────┘
+   └──→ CANCELLED ←────┘
 ```
 
-状态约束通过 `order-state-machine.ts` 中的 `canTransition()` 函数实现。
+状态约束通过 `src/utils/order-state-machine.ts` 中的 `canTransition()` 函数实现。
 
 ---
 
-## 支付流程
+## 可选配置
 
-```
-用户创建订单 → 选择支付方式 → /api/payment/create 生成 paymentUrl + paymentId
-→ 存储 paymentId 到 Order 表 → 用户完成支付
-→ 支付宝异步通知 /api/payment/alipay/notify（根据 paymentId 查找订单）
-→ 更新 paymentStatus = 'paid'
-```
+### Pusher 实时通信
 
----
+用于聊天消息实时推送和订单通知：
 
-## 认证与安全
+1. 注册 [Pusher](https://pusher.com/) 账号
+2. 创建应用，获取 Key/Cluster/AppId/Secret
+3. 填入 `.env.local`
 
-- **JWT Token** — 7 天有效期，存储在 httpOnly Cookie 中
-- **密码** — bcrypt 哈希，API 响应中不返回密码字段（`select` 排除）
-- **`JWT_SECRET`** — 必填环境变量，缺失时直接抛出错误拒绝启动
-- **`QWEN_API_KEY`** — 仅通过环境变量注入，源码中无硬编码
+### 支付功能
 
----
+- **支付宝沙箱**：在 [支付宝开放平台](https://open.alipay.com/) 申请沙箱应用
+- **微信支付**：在 [微信支付商户平台](https://pay.weixin.qq.com/) 申请商户号
 
-## 公共模块
-
-| 模块 | 用途 |
-|------|------|
-| `@/data/gameColors` | 12 款游戏的主题色 + `getGameColor()` 工具函数 |
-| `@/utils/date` | `formatDate()` 日期格式化 |
-| `@/data/orderConstants` | `statusLabels` / `statusColors` / `paymentLabels` 常量 |
-| `@/components/ChatModal` | 陪玩聊天弹窗（AI 对话 + 历史记录） |
+> 支付功能为可选配置，未配置时下单流程仍可走通（模拟支付）。
 
 ---
 

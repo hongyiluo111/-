@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { prisma } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserIdFromRequest } from '@/lib/auth';
@@ -30,18 +32,20 @@ export async function POST(
       return NextResponse.json({ error: '已经是成员' }, { status: 409 });
     }
 
-    await prisma.clubMember.create({
-      data: {
-        clubId: id,
-        userId,
-        role: 'member',
-      },
-    });
-
-    await prisma.club.update({
-      where: { id },
-      data: { memberCount: { increment: 1 } },
-    });
+    // 事务保证成员创建与计数原子性
+    await prisma.$transaction([
+      prisma.clubMember.create({
+        data: {
+          clubId: id,
+          userId,
+          role: 'member',
+        },
+      }),
+      prisma.club.update({
+        where: { id },
+        data: { memberCount: { increment: 1 } },
+      }),
+    ]);
 
     return NextResponse.json({ success: true });
   } catch (error) {

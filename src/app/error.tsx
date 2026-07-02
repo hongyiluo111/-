@@ -7,6 +7,7 @@ export default function Error({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  void error; // eslint-disable-line @typescript-eslint/no-unused-vars
   return (
     <div className="min-h-[60vh] flex items-center justify-center px-4">
       <div className="text-center max-w-md">

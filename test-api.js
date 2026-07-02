@@ -1,10 +1,39 @@
-fetch('http://localhost:3001/api/admin/orders', {
-  headers: {
-    'Cookie': 'token=' + getCookie('token')
-  }
-}).then(r => r.json()).then(d => console.log(JSON.stringify(d, null, 2))).catch(e => console.error(e));
+const http = require('http');
 
-function getCookie(name) {
-  const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
-  return match ? match[2] : '';
-}
+const data = JSON.stringify({ email: 'test@example.com', password: '123456' });
+
+const options = {
+  hostname: 'localhost',
+  port: 3456,
+  path: '/api/auth/login',
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'Content-Length': data.length,
+  },
+  timeout: 30000,
+};
+
+const req = http.request(options, (res) => {
+  let body = '';
+  res.on('data', (chunk) => { body += chunk; });
+  res.on('end', () => {
+    console.log('Status:', res.statusCode);
+    console.log('Body:', body);
+    process.exit(0);
+  });
+});
+
+req.on('error', (e) => {
+  console.error('Error:', e.message);
+  process.exit(1);
+});
+
+req.on('timeout', () => {
+  console.error('Timeout');
+  req.destroy();
+  process.exit(1);
+});
+
+req.write(data);
+req.end();
