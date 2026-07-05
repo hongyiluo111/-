@@ -6,6 +6,9 @@ import QueryProvider from '@/components/QueryProvider';
 import AIService from '@/components/AIService';
 import ThemeProvider from '@/components/ThemeProvider';
 import { ToastProvider } from '@/components/Toast';
+import VoiceRoomPanel from '@/components/voice/VoiceRoomPanel';
+import VoiceRoomFloating from '@/components/voice/VoiceRoomFloating';
+
 import OrderNotification from '@/components/OrderNotification';
 
 const inter = Inter({ subsets: ['latin'] });
@@ -28,8 +31,10 @@ export default function RootLayout({
             <ToastProvider>
               <Navbar />
               <div className="pt-16 page-enter">{children}</div>
-              <AIService />
-              <OrderNotification />
+<AIService />
+              <VoiceRoomPanel />
+              <VoiceRoomFloating />
+<OrderNotification />
             </ToastProvider>
           </QueryProvider>
         </ThemeProvider>

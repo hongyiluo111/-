@@ -28,7 +28,7 @@ export default function VoiceRoomEntry({
   const [error, setError] = useState('');
   const user = useUserStore((s) => s.user);
   const voiceRoom = useVoiceRoomStore();
-  const { joinRoom } = useVoiceRoom(user?.id || null);
+  const { joinRoom, leaveRoom } = useVoiceRoom(user?.id || null);
 
   const handleClick = async () => {
     if (!user) {
@@ -36,8 +36,23 @@ export default function VoiceRoomEntry({
       return;
     }
 
+    // Compute target room ID early
+    const computedRoomId = existingRoomId ||
+      (type === 'order' && orderId ? `order-${orderId}` :
+       type === 'club' && clubId ? `club-${clubId}` :
+       null);
+
     // Already in a room
-    if (voiceRoom.isOpen && voiceRoom.roomId) {
+    if (voiceRoom.isOpen && voiceRoom.roomId && computedRoomId) {
+      // Same room: just show the panel
+      if (voiceRoom.roomId === computedRoomId) {
+        voiceRoom.setMinimized(false);
+        voiceRoom.setOpen(true);
+        return;
+      }
+      // Different room: leave current first, then join new below
+      await leaveRoom();
+    } else if (voiceRoom.isOpen && voiceRoom.roomId) {
       voiceRoom.setMinimized(false);
       voiceRoom.setOpen(true);
       return;
@@ -47,7 +62,7 @@ export default function VoiceRoomEntry({
     setError('');
 
     try {
-      let targetRoomId = existingRoomId;
+      let targetRoomId = computedRoomId;
 
       // Create or find room
       if (!targetRoomId) {

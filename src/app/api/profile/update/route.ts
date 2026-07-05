@@ -1,7 +1,8 @@
-export const dynamic = 'force-dynamic';
+﻿export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { sanitize } from '@/lib/utils';
 import { getUserIdFromRequest } from '@/lib/auth';
 
 export async function PATCH(request: NextRequest) {
@@ -20,7 +21,7 @@ export async function PATCH(request: NextRequest) {
 
     const updated = await prisma.user.update({
       where: { id: userId },
-      data: { name },
+      data: { name: sanitize(name) },
       select: {
         id: true,
         name: true,
@@ -36,3 +37,4 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: '更新资料失败' }, { status: 500 });
   }
 }
+

@@ -22,6 +22,12 @@ export default function VoiceRoomPanel() {
   const [callDuration, setCallDuration] = useState('00:00');
   const panelRef = useRef<HTMLDivElement>(null);
 
+  // 从 members 实时计算每个频道的在线人数
+  const channelsWithCounts = channels.map((ch) => ({
+    ...ch,
+    participantCount: members.filter((m) => m.channelId === ch.id).length,
+  }));
+
   // Call duration timer
   useEffect(() => {
     if (!joinedAt) return;
@@ -115,7 +121,7 @@ export default function VoiceRoomPanel() {
           {/* Channel list - left side */}
           <div className="w-36 border-r border-gray-200 dark:border-gray-700 flex flex-col bg-gray-50 dark:bg-gray-800/30">
             <VoiceChannelList
-              channels={channels}
+              channels={channelsWithCounts}
               currentChannelId={currentChannelId}
               onSwitchChannel={switchChannel}
             />

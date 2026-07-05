@@ -342,3 +342,29 @@ model PostLike {
   @@unique([postId, userId])
   @@index([userId])
 }
+
+// 举报模型
+model Report {
+  id         String   @id @default(cuid())
+  reporterId String
+  targetId   String
+  targetType String
+  reason     String
+  status     String   @default("pending")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([reporterId])
+  @@index([targetType, status])
+}
+
+// 拉黑用户模型
+model BlockedUser {
+  id        String   @id @default(cuid())
+  blockerId String
+  blockedId String
+  createdAt DateTime @default(now())
+
+  @@unique([blockerId, blockedId])
+  @@index([blockerId])
+}

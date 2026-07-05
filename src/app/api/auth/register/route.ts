@@ -1,7 +1,8 @@
-export const dynamic = 'force-dynamic';
+﻿export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { sanitize } from '@/lib/utils';
 import bcrypt from 'bcrypt';
 import { generateToken, setAuthCookie } from '@/lib/jwt';
 
@@ -47,7 +48,7 @@ export async function POST(request: NextRequest) {
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = await prisma.user.create({
-      data: { name, email, password: hashedPassword, role: 'user', status: 'active' },
+      data: { name: sanitize(name), email, password: hashedPassword, role: 'user', status: 'active' },
       select: { id: true, email: true, name: true, role: true }
     });
 
@@ -62,3 +63,4 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: false, error: '注册失败' }, { status: 500 });
   }
 }
+

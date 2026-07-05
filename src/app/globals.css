@@ -1,4 +1,4 @@
-@tailwind base;
+﻿@tailwind base;
 @tailwind components;
 @tailwind utilities;
 
@@ -49,8 +49,8 @@ body.dark {
   -webkit-tap-highlight-color: transparent;
 }
 
-/* ====== 按钮体系 ======
-   全局按钮交互：ripple 波纹 + active 按压 + focus-visible 焦点环
+/* ====== 鎸夐挳浣撶郴 ======
+   鍏ㄥ眬鎸夐挳浜や簰锛歳ipple 娉㈢汗 + active 鎸夊帇 + focus-visible 鐒︾偣鐜?
 */
 
 .btn {
@@ -59,12 +59,12 @@ body.dark {
   overflow: hidden;
 }
 
-/* 按钮按压反馈 */
+/* 鎸夐挳鎸夊帇鍙嶉 */
 .btn:active:not(:disabled) {
   transform: scale(0.97);
 }
 
-/* Ripple 波纹效果 */
+/* Ripple 娉㈢汗鏁堟灉 */
 .btn::after {
   content: '';
   position: absolute;
@@ -82,7 +82,7 @@ body.dark {
   transition: 0s;
 }
 
-/* Focus-visible 焦点环 */
+/* Focus-visible 鐒︾偣鐜?*/
 .btn:focus-visible {
   outline: 2px solid var(--primary);
   outline-offset: 2px;
@@ -104,7 +104,7 @@ body.dark {
   @apply bg-gradient-to-r from-error to-error/80 text-white border border-error/30 hover:shadow-lg hover:translate-y-[-2px];
 }
 
-/* ====== 原生 <button> 全局增强 ======*/
+/* ====== 鍘熺敓 <button> 鍏ㄥ眬澧炲己 ======*/
 button:not(:disabled) {
   cursor: pointer;
 }
@@ -114,7 +114,7 @@ button:focus-visible {
   outline-offset: 2px;
 }
 
-/* 通用按钮按压 & ripple */
+/* 閫氱敤鎸夐挳鎸夊帇 & ripple */
 button:not(.btn):not(:disabled):active {
   transform: scale(0.97);
   transition: transform 0.1s ease;
@@ -137,13 +137,13 @@ button:not(.btn):active::after {
   transition: 0s;
 }
 
-/* 确保所有 <button> 都有 relative + overflow 以支持 ripple */
+/* 纭繚鎵€鏈?<button> 閮芥湁 relative + overflow 浠ユ敮鎸?ripple */
 button {
   position: relative;
   overflow: hidden;
 }
 
-/* ====== 链接式按钮 (a.btn) ======*/
+/* ====== 閾炬帴寮忔寜閽?(a.btn) ======*/
 a.btn {
   cursor: pointer;
 }
@@ -191,7 +191,7 @@ a.btn:focus-visible {
   @apply bg-gradient-to-r from-primary to-secondary text-white border-transparent shadow-sm;
 }
 
-/* 动画效果 */
+/* 鍔ㄧ敾鏁堟灉 */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -299,7 +299,7 @@ a.btn:focus-visible {
   transform: translateY(0) scale(1);
 }
 
-/* 滚动条样式 - 圆角灰条 */
+/* 婊氬姩鏉℃牱寮?- 鍦嗚鐏版潯 */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -326,7 +326,7 @@ a.btn:focus-visible {
   background: #6b7280;
 }
 
-/* Firefox 滚动条 */
+/* Firefox 婊氬姩鏉?*/
 * {
   scrollbar-width: thin;
   scrollbar-color: #d1d5db transparent;
@@ -336,22 +336,22 @@ a.btn:focus-visible {
   scrollbar-color: #4b5563 transparent;
 }
 
-/* 平滑滚动 */
+/* 骞虫粦婊氬姩 */
 html {
   scroll-behavior: smooth;
 }
 
-/* 加载动画 */
+/* 鍔犺浇鍔ㄧ敾 */
 .loading {
   @apply animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary;
 }
 
-/* 卡片悬停效果增强 */
+/* 鍗＄墖鎮仠鏁堟灉澧炲己 */
 .card-hover {
   @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-1;
 }
 
-/* 文本渐变 */
+/* 鏂囨湰娓愬彉 */
 .text-gradient {
   @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary;
 }
@@ -365,12 +365,12 @@ html {
   background-image: linear-gradient(135deg, #e2e8f0 0%, #64b5f6 50%, #42a5f5 100%);
 }
 
-/* 空状态容器 */
+/* 绌虹姸鎬佸鍣?*/
 .empty-state {
   @apply rounded-2xl border border-dashed border-gray-200 dark:border-gray-700 bg-white/70 dark:bg-gray-800/70 px-6 py-10 text-center text-gray-500 dark:text-gray-400;
 }
 
-/* 统一表格观感 */
+/* 缁熶竴琛ㄦ牸瑙傛劅 */
 .table-shell {
   @apply overflow-hidden rounded-2xl border border-gray-100/90 dark:border-gray-800/90 bg-white dark:bg-gray-900;
 }
@@ -391,7 +391,7 @@ html {
   @apply px-4 py-3 text-sm;
 }
 
-/* ====== 粒子背景 ====== */
+/* ====== 绮掑瓙鑳屾櫙 ====== */
 @keyframes particleFloat {
   0%, 100% { transform: translateY(0) translateX(0); opacity: 0; }
   10% { opacity: 1; }
@@ -416,7 +416,7 @@ html {
   animation: particleFloat linear infinite;
 }
 
-/* ====== 噪点纹理 ====== */
+/* ====== 鍣偣绾圭悊 ====== */
 .noise-overlay {
   position: absolute;
   inset: 0;
@@ -427,7 +427,7 @@ html {
   background-size: 128px 128px;
 }
 
-/* ====== 消息滑入 ====== */
+/* ====== 娑堟伅婊戝叆 ====== */
 @keyframes messageSlideIn {
   from {
     opacity: 0;
@@ -443,7 +443,7 @@ html {
   animation: messageSlideIn 0.2s ease-out forwards;
 }
 
-/* ====== 数字滚动 ====== */
+/* ====== 鏁板瓧婊氬姩 ====== */
 @keyframes countUp {
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
@@ -453,9 +453,29 @@ html {
   animation: countUp 0.4s ease-out forwards;
 }
 
-/* ====== 按钮 shimmer 增强 ====== */
+/* ====== 鎸夐挳 shimmer 澧炲己 ====== */
 .btn-primary::before {
   content: '';
+
+/* ====== 语音房间动画 ====== */
+@keyframes voicePulse {
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.2); }
+}
+
+.animate-voice-pulse {
+  animation: voicePulse 1.5s ease-in-out infinite;
+}
+
+@keyframes slideInRight {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+.animate-slide-in-right {
+  animation: slideInRight 0.25s ease-out forwards;
+}
+
   position: absolute;
   top: 0;
   left: -100%;
@@ -470,7 +490,7 @@ html {
   left: 100%;
 }
 
-/* ====== 卡片 shimmer 增强 ====== */
+/* ====== 鍗＄墖 shimmer 澧炲己 ====== */
 .card-shimmer {
   position: relative;
   overflow: hidden;
@@ -490,7 +510,7 @@ html {
   animation: shimmerSlide 0.9s ease;
 }
 
-/* ====== 返回顶部按钮 ====== */
+/* ====== 杩斿洖椤堕儴鎸夐挳 ====== */
 .back-to-top {
   @apply fixed bottom-20 right-3 z-40 flex h-10 w-10 items-center justify-center rounded-full bg-primary/80 text-white shadow-lg backdrop-blur transition-all duration-300 hover:bg-primary hover:scale-110;
   opacity: 0;
@@ -504,9 +524,9 @@ html {
   pointer-events: auto;
 }
 
-/* ====== 减少动画模式 ======
-   尊重系统偏好 prefers-reduced-motion: reduce
-   关闭所有非必要动画、过渡、磁性偏移和 3D 倾斜
+/* ====== 鍑忓皯鍔ㄧ敾妯″紡 ======
+   灏婇噸绯荤粺鍋忓ソ prefers-reduced-motion: reduce
+   鍏抽棴鎵€鏈夐潪蹇呰鍔ㄧ敾銆佽繃娓°€佺鎬у亸绉诲拰 3D 鍊炬枩
 */
 @media (prefers-reduced-motion: reduce) {
   *,
@@ -518,12 +538,12 @@ html {
     scroll-behavior: auto !important;
   }
 
-  /* 禁用磁性按钮偏移 */
+  /* 绂佺敤纾佹€ф寜閽亸绉?*/
   .magnetic-btn {
     transform: none !important;
   }
 
-  /* 禁用 3D 倾斜 */
+  /* 绂佺敤 3D 鍊炬枩 */
   .tilt-card {
     transform: none !important;
   }
@@ -566,7 +586,7 @@ html {
     transform: none !important;
   }
 
-  /* 禁用按钮按压与 ripple */
+  /* 绂佺敤鎸夐挳鎸夊帇涓?ripple */
   .btn:active:not(:disabled),
   button:not(.btn):not(:disabled):active {
     transform: none !important;
@@ -577,3 +597,4 @@ html {
     display: none !important;
   }
 }
+

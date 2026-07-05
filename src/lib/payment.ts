@@ -115,8 +115,9 @@ async function createAlipayOrder(amount: number, userId: string): Promise<Paymen
   return { paymentUrl, paymentId: orderNo };
 }
 
-async function createWechatOrder(amount: number, userId: string): Promise<PaymentResult> {
+async function createWechatOrder(amount: number, _userId: string): Promise<PaymentResult> {
   const orderNo = generateOrderNo();
+  void _userId;
 
   if (!wechatPay) {
     return {
